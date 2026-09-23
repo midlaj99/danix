@@ -34,8 +34,8 @@ export const DeathModal: React.FC<DeathModalProps> = ({
   const ammoNeeded = retryAmmoBreakdown ? retryAmmoBreakdown.toRecover : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in pointer-events-auto">
-      <div className="relative w-full max-w-md rpg-panel-danger p-7 md:p-8 shadow-2xl flex flex-col items-center text-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in pointer-events-auto">
+      <div className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rpg-panel-danger p-5 sm:p-7 shadow-2xl flex flex-col items-center text-center">
         {/* Icon */}
         <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-rose-950/80 border-2 border-rose-500 flex items-center justify-center text-rose-400 mb-3.5 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
           {isAmmoDefeat ? (

@@ -223,22 +223,22 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
       ))}
 
       {/* Main Container */}
-      <div className="relative w-full max-w-4xl bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 border border-sky-500/40 rounded-3xl shadow-[0_0_50px_rgba(56,189,248,0.25)] overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-3xl bg-slate-900/95 border-2 border-sky-500/40 rounded-3xl shadow-[0_0_50px_rgba(56,189,248,0.25)] overflow-hidden flex flex-col max-h-[94vh]">
         {/* Top Header Banner */}
-        <div className="relative px-6 py-4 bg-slate-900/90 border-b border-sky-500/20 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-inner">
-              <BookOpen className="w-5 h-5" />
+        <div className="relative px-3 py-2.5 sm:px-5 sm:py-3 bg-slate-950/90 border-b border-sky-500/20 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-2 truncate">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-inner shrink-0">
+              <BookOpen className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-widest text-sky-400">
-                  {isRetry ? '⚔️ Combat Ammo Recovery' : "Aria's Academy"}
+            <div className="truncate">
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-sky-400 truncate">
+                  {isRetry ? '⚔️ Ammo Recovery' : "Aria's Academy"}
                 </span>
-                <span className="text-xs text-slate-500">•</span>
-                <span className="text-xs text-amber-400 font-medium">{levelTitle}</span>
+                <span className="text-[10px] text-slate-500">•</span>
+                <span className="text-[10px] text-amber-400 font-medium truncate">{levelTitle}</span>
               </div>
-              <h2 className="text-lg font-bold text-white tracking-wide">{topicTitle}</h2>
+              <h2 className="text-xs sm:text-base font-bold text-white tracking-wide truncate">{topicTitle}</h2>
             </div>
           </div>
 
@@ -283,10 +283,10 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
 
         {/* Modal Body */}
         {!isSessionFinished ? (
-          <div className="p-6 md:p-8 overflow-y-auto space-y-5">
+          <div className="p-3 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4 flex-1 min-h-0">
             {/* Progress Bar & Question Counter */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-medium text-slate-400">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[11px] sm:text-xs font-medium text-slate-400">
                 <span>
                   QUESTION {currentIndex + 1} OF {questions.length}
                 </span>
@@ -294,7 +294,7 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
                   {Math.round(((currentIndex + 1) / questions.length) * 100)}% Complete
                 </span>
               </div>
-              <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                 <div
                   className="h-full bg-gradient-to-r from-sky-500 via-cyan-400 to-amber-400 transition-all duration-500 rounded-full"
                   style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -313,34 +313,34 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
             </div>
 
             {/* Question Text */}
-            <div className="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-5 shadow-inner">
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-950/80 text-sky-400 border border-sky-500/40">
+            <div className="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-3.5 sm:p-5 shadow-inner">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-sky-950/80 text-sky-400 border border-sky-500/40">
                   {currentQuestion.type ? currentQuestion.type.replace('_', ' ') : 'MULTIPLE CHOICE'}
                 </span>
-                <span className="text-[10px] font-mono text-amber-400 flex items-center gap-1">
-                  ⚡ +1 Radoxom Ammo
+                <span className="text-[9px] sm:text-[10px] font-mono text-amber-400 flex items-center gap-0.5">
+                  ⚡ +1 Radoxom
                 </span>
                 {questionState === 'TIMED_OUT' && (
-                  <span className="text-[10px] font-mono text-rose-400 flex items-center gap-1 ml-auto bg-rose-950/80 border border-rose-500/40 px-2 py-0.5 rounded animate-pulse">
+                  <span className="text-[9px] sm:text-[10px] font-mono text-rose-400 flex items-center gap-1 ml-auto bg-rose-950/80 border border-rose-500/40 px-1.5 py-0.2 rounded animate-pulse">
                     <AlertTriangle className="w-3 h-3" /> TIMED OUT
                   </span>
                 )}
               </div>
-              <h3 className="text-lg md:text-xl font-semibold text-slate-100 leading-relaxed">
+              <h3 className="text-sm sm:text-lg font-semibold text-slate-100 leading-snug sm:leading-relaxed">
                 {currentQuestion.question}
               </h3>
 
               {/* Monospace Code snippet block if applicable */}
               {currentQuestion.codeSnippet && (
-                <div className="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-sm text-sky-300 overflow-x-auto shadow-inner leading-relaxed">
+                <div className="mt-2.5 p-2.5 sm:p-3.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs sm:text-sm text-sky-300 overflow-x-auto shadow-inner leading-relaxed">
                   <pre>{currentQuestion.codeSnippet}</pre>
                 </div>
               )}
             </div>
 
             {/* Answer Options Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-0.5">
               {(displayOptions.length > 0 ? displayOptions : currentQuestion.options).map((option, idx) => {
                 const isSelected = selectedOption === option;
                 const isCorrect = option === currentQuestion.correctAnswer;
@@ -350,12 +350,12 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
 
                 if (questionState === 'CORRECT' && isSelected) {
                   btnStyle =
-                    'bg-emerald-950/80 border-emerald-400 text-emerald-200 shadow-[0_0_20px_rgba(52,211,153,0.35)] scale-[1.02]';
+                    'bg-emerald-950/80 border-emerald-400 text-emerald-200 shadow-[0_0_20px_rgba(52,211,153,0.35)] scale-[1.01] font-bold';
                 } else if (questionState === 'INCORRECT' && isSelected) {
                   btnStyle =
                     'bg-rose-950/80 border-rose-500 text-rose-200 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-shake';
                 } else if ((questionState === 'INCORRECT' || questionState === 'TIMED_OUT') && isCorrect) {
-                  btnStyle = 'bg-emerald-950/40 border-emerald-500/60 text-emerald-300';
+                  btnStyle = 'bg-emerald-950/40 border-emerald-500/60 text-emerald-300 font-semibold';
                 } else if (questionState === 'TIMED_OUT') {
                   btnStyle = 'bg-slate-900/60 border-slate-800 text-slate-500 opacity-60';
                 }
@@ -365,12 +365,14 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
                     key={idx}
                     onClick={(e) => handleSelectOption(option, e)}
                     disabled={isInputDisabled}
-                    className={`relative text-left p-4 rounded-2xl border transition-all duration-200 flex items-start gap-3 group cursor-pointer disabled:cursor-default ${btnStyle}`}
+                    className={`relative text-left p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border transition-all duration-200 flex items-center gap-2.5 group cursor-pointer disabled:cursor-default min-h-[46px] ${btnStyle}`}
                   >
-                    <div className="w-7 h-7 rounded-xl bg-slate-900/80 border border-slate-700 flex items-center justify-center font-bold text-xs text-sky-400 shrink-0 group-hover:border-sky-400 transition-colors">
+                    <div className="w-6 h-6 rounded-lg bg-slate-900/80 border border-slate-700 flex items-center justify-center font-bold text-xs text-sky-400 shrink-0 group-hover:border-sky-400 transition-colors">
                       {String.fromCharCode(65 + idx)}
                     </div>
-                    <span className="font-mono text-sm leading-snug pt-0.5">{option}</span>
+                    <span className="text-xs sm:text-sm font-mono leading-tight break-words flex-1">
+                      {option}
+                    </span>
 
                     {questionState === 'CORRECT' && isSelected && (
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 ml-auto shrink-0 animate-bounce" />

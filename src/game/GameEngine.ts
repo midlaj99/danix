@@ -57,6 +57,12 @@ export class GameEngine {
   public readonly worldWidth = 2400;
   public groundY = 400;
   public cameraX = 0;
+  public cameraY = 0;
+  public cameraZoom = 1.0;
+  public targetCameraZoom = 1.0;
+  public viewportWidth = 1920;
+  public viewportHeight = 1080;
+  public dpr = 1;
 
   // Screen shake & cinematic mode
   private shakeTimer = 0;
@@ -626,15 +632,19 @@ export class GameEngine {
     this.stop();
   }
 
-  public handleResize(width: number, height: number) {
-    if (height < 520) {
+  public handleResize(width: number, height: number, dpr: number = 1) {
+    this.viewportWidth = width;
+    this.viewportHeight = height;
+    this.dpr = Math.max(1, dpr);
+
+    if (height > width) {
+      // Mobile portrait mode: elevated ground level provides generous room for bottom virtual controls
+      this.groundY = Math.min(520, Math.floor(height * 0.60));
+    } else if (height < 520) {
       // Mobile horizontal landscape mode: optimal combat ground positioning
-      this.groundY = Math.min(height - 85, Math.floor(height * 0.72));
-    } else if (height > width) {
-      // Mobile vertical portrait fallback
-      this.groundY = Math.min(520, Math.floor(height * 0.58));
+      this.groundY = Math.min(height - 80, Math.floor(height * 0.72));
     } else {
-      // Standard desktop widescreen
+      // Standard desktop / tablet widescreen
       this.groundY = Math.min(460, Math.floor(height * 0.62));
     }
 
@@ -661,12 +671,12 @@ export class GameEngine {
       this.shakeTimer -= dt;
     }
 
-    // Sync mouse from InputManager
-    this.input.setCameraX(this.cameraX);
+    // Sync camera transform to InputManager
+    this.input.setCameraTransform(this.cameraX, this.cameraY, this.cameraZoom);
     this.mouseX = this.input.mouseScreenX;
     this.mouseY = this.input.mouseScreenY;
 
-    // Direct aim angle towards world mouse cursor or auto-aim assist
+    // Direct aim angle towards world mouse cursor or fair aim assist
     const heroCenterX = this.hero.x + this.hero.width / 2;
     const heroCenterY = this.hero.y + this.hero.height / 2;
 
@@ -674,18 +684,26 @@ export class GameEngine {
       const mCenterX = this.monster.x + this.monster.width / 2;
       const mCenterY = this.monster.y + this.monster.height / 2;
       this.input.setAutoAimTarget(mCenterX, mCenterY);
+      const angleToMonster = Math.atan2(mCenterY - heroCenterY, mCenterX - heroCenterX);
 
-      if (this.input.isTouchMode) {
-        // Auto-aim assist targeting monster center on touch controls
-        this.hero.aimAngle = Math.atan2(mCenterY - heroCenterY, mCenterX - heroCenterX);
-        this.mouseX = mCenterX - this.cameraX;
-        this.mouseY = mCenterY;
+      if (this.input.isAiming && this.input.mobileAimAngle !== null) {
+        // Player is actively dragging aim vector on mobile touch controls
+        this.hero.aimAngle = this.input.applyFairAimAssist(this.input.mobileAimAngle, angleToMonster);
+      } else if (this.input.isTouchMode) {
+        // Default touch aim: points in facing direction, with fair soft magnetic guidance if in front
+        const facingAngle = this.hero.facingRight ? 0 : Math.PI;
+        this.hero.aimAngle = this.input.applyFairAimAssist(facingAngle, angleToMonster);
       } else {
-        this.hero.aimAngle = Math.atan2(this.mouseY - heroCenterY, this.input.mouseWorldX - heroCenterX);
+        // Desktop mouse aim
+        this.hero.aimAngle = Math.atan2(this.input.mouseWorldY - heroCenterY, this.input.mouseWorldX - heroCenterX);
       }
     } else {
       this.input.clearAutoAimTarget();
-      this.hero.aimAngle = Math.atan2(this.mouseY - heroCenterY, this.input.mouseWorldX - heroCenterX);
+      if (this.input.isAiming && this.input.mobileAimAngle !== null) {
+        this.hero.aimAngle = this.input.mobileAimAngle;
+      } else {
+        this.hero.aimAngle = Math.atan2(this.input.mouseWorldY - heroCenterY, this.input.mouseWorldX - heroCenterX);
+      }
     }
 
     // Synchronize keys from InputManager
@@ -895,11 +913,29 @@ export class GameEngine {
         this.ammoExhaustionTimer = 0;
       }
 
-      // Camera centers dynamically between Hero and Monster in combat
+      // Dynamic Responsive Camera: automatically calculates combat zoom & framing to keep both combatants visible
       if (this.monster) {
+        const isPortrait = this.viewportHeight > this.viewportWidth;
+        const dist = Math.abs(this.hero.x - this.monster.x);
+        const padding = isPortrait ? 220 : 320;
+        const combatSpan = Math.max(650, dist + padding);
+
+        // Adaptive Combat Zoom
+        const availableW = this.viewportWidth * (isPortrait ? 0.94 : 0.88);
+        const fitZoomX = availableW / combatSpan;
+        const fitZoomY = (this.viewportHeight * (isPortrait ? 0.60 : 0.72)) / 480;
+        const targetZoom = Math.min(isPortrait ? 0.85 : 1.1, Math.max(isPortrait ? 0.48 : 0.62, Math.min(fitZoomX, fitZoomY)));
+
+        this.targetCameraZoom = targetZoom;
+        this.cameraZoom += (this.targetCameraZoom - this.cameraZoom) * 0.08;
+
         const midX = (this.hero.x + this.monster.x) / 2;
-        const targetCameraX = Math.max(0, Math.min(midX - this.canvas.width / 2, this.worldWidth - this.canvas.width));
-        this.cameraX += (targetCameraX - this.cameraX) * 0.1;
+        const halfVisibleW = (this.viewportWidth / 2) / this.cameraZoom;
+        const targetCameraX = Math.max(0, Math.min(midX - halfVisibleW, this.worldWidth - halfVisibleW * 2));
+        const targetCameraY = this.groundY - (this.viewportHeight * (isPortrait ? 0.46 : 0.52)) / this.cameraZoom;
+
+        this.cameraX += (targetCameraX - this.cameraX) * 0.12;
+        this.cameraY += (targetCameraY - this.cameraY) * 0.12;
       }
     } else {
       // Safe boundary clamp during exploration
@@ -983,17 +1019,24 @@ export class GameEngine {
         }
       }
 
-      // Camera follow
+      // Exploration camera follow & zoom
+      const isPortrait = this.viewportHeight > this.viewportWidth;
+      this.targetCameraZoom = isPortrait ? 0.72 : 1.0;
+      this.cameraZoom += (this.targetCameraZoom - this.cameraZoom) * 0.1;
+
+      const halfVisibleW = (this.viewportWidth / 2) / this.cameraZoom;
       let targetCameraX = Math.max(
         0,
-        Math.min(this.hero.x - this.canvas.width / 3, this.worldWidth - this.canvas.width)
+        Math.min(this.hero.x - halfVisibleW * 0.6, this.worldWidth - halfVisibleW * 2)
       );
+      let targetCameraY = this.groundY - (this.viewportHeight * 0.52) / this.cameraZoom;
 
       if (this.isCinematicIntro && this.monster) {
-        targetCameraX = Math.max(0, this.monster.x - this.canvas.width / 2);
+        targetCameraX = Math.max(0, this.monster.x - halfVisibleW);
       }
 
       this.cameraX += (targetCameraX - this.cameraX) * 0.12;
+      this.cameraY += (targetCameraY - this.cameraY) * 0.12;
     }
 
     // Clear single-frame triggers on InputManager
@@ -1003,11 +1046,13 @@ export class GameEngine {
   /* ------------------- HEAVENLY ETHEREAL GRAPHICS PIPELINE ------------------- */
 
   private render() {
-    const width = this.canvas.width;
-    const height = this.canvas.height;
+    const width = this.viewportWidth;
+    const height = this.viewportHeight;
     const ctx = this.ctx;
 
     ctx.save();
+    // High-DPI physical backing scaling
+    ctx.scale(this.dpr, this.dpr);
 
     if (this.shakeTimer > 0) {
       const sx = (Math.random() - 0.5) * this.shakeIntensity;
@@ -1017,27 +1062,18 @@ export class GameEngine {
 
     const envType = this.levelConfig.environment.type;
 
-    // Layer 1: Ethereal Sky with Auroras
+    // Layer 1-6: Parallax Sky & Scenery (Screen-space framing)
     this.renderHeavenlySky(ctx, width, height, envType);
-
-    // Layer 2: Volumetric Luminous God Rays (Streaming light beams)
     this.renderVolumetricGodRays(ctx, width, height);
-
-    // Layer 3: Floating Celestial Sky Islands & Temples (depth 0.12)
     this.renderFloatingSkyIslands(ctx, width, height, this.cameraX * 0.12);
-
-    // Layer 4: Distant Horizons & Mist (depth 0.25)
     this.renderDistantHorizons(ctx, width, height, this.cameraX * 0.25, envType);
-
-    // Layer 5: Midground Scenery (depth 0.45)
     this.renderMidgroundScenery(ctx, width, height, this.cameraX * 0.45, envType);
-
-    // Layer 6: Near Canopy Trees / Flora (depth 0.7)
     this.renderNearFeatures(ctx, width, height, this.cameraX * 0.7, envType);
 
-    // World Space Translation (1:1 Camera Tracking)
+    // World Space Translation with Adaptive Camera Zoom
     ctx.save();
-    ctx.translate(-Math.round(this.cameraX), 0);
+    ctx.scale(this.cameraZoom, this.cameraZoom);
+    ctx.translate(-Math.round(this.cameraX), -Math.round(this.cameraY));
 
     // Layer 7: Textured Ground & Runic Pathways
     this.renderGround(ctx, envType);
@@ -1082,53 +1118,78 @@ export class GameEngine {
     // Layer 12: Dynamic Combat Slashes & Sparks
     this.particles.render(ctx);
 
-    ctx.restore(); // Restore camera translation
-
-    // Layer 12.5: Aim Reticle in screen space
+    // World-space Aim Reticle with fair direction preview
     if (this.isRealTimeCombat) {
-      this.renderAimReticle(ctx);
+      this.renderAimReticleWorld(ctx);
     }
+
+    ctx.restore(); // Restore world transformation
 
     // Layer 13: Cinematic Letterbox Bars
     if (this.isCinematicIntro) {
       this.renderCinematicBars(ctx, width, height);
     }
 
-    ctx.restore(); // Restore screen shake
+    ctx.restore(); // Restore High-DPI scale & screen shake
   }
 
   /* --- REAL-TIME COMBAT GRAPHICS: RETICLE & ARENA BARRIERS --- */
-  private renderAimReticle(ctx: CanvasRenderingContext2D) {
-    const rx = this.mouseX;
-    const ry = this.mouseY;
-    const time = performance.now() * 0.004;
+  private renderAimReticleWorld(ctx: CanvasRenderingContext2D) {
+    const heroCenterX = this.hero.x + this.hero.width / 2;
+    const heroCenterY = this.hero.y + this.hero.height / 2;
 
+    let rx: number;
+    let ry: number;
+
+    if (this.input.isTouchMode) {
+      // In touch mode, reticle sits along the aim direction ahead of the hero
+      rx = heroCenterX + Math.cos(this.hero.aimAngle) * 140;
+      ry = heroCenterY + Math.sin(this.hero.aimAngle) * 140;
+    } else {
+      rx = this.input.mouseWorldX;
+      ry = this.input.mouseWorldY;
+    }
+
+    const time = performance.now() * 0.004;
     ctx.save();
     ctx.translate(rx, ry);
 
+    // Subtle aim guide line from hero to reticle on touch
+    if (this.input.isTouchMode && this.hero.radoxomAmmoCount > 0) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(heroCenterX - rx, heroCenterY - ry);
+      ctx.lineTo(0, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // Rotating outer ring
     ctx.rotate(time);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(0, 0, 16, 0, Math.PI * 2);
+    ctx.arc(0, 0, 18, 0, Math.PI * 2);
     ctx.stroke();
 
     // 4 crosshair dashes
     ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     for (let i = 0; i < 4; i++) {
       const a = (i * Math.PI) / 2;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 7, Math.sin(a) * 7);
-      ctx.lineTo(Math.cos(a) * 19, Math.sin(a) * 19);
+      ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
+      ctx.lineTo(Math.cos(a) * 22, Math.sin(a) * 22);
       ctx.stroke();
     }
 
     // Center pinpoint
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();

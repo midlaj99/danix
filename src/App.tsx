@@ -32,6 +32,9 @@ import { MobileOrientationGuard } from './components/mobile/MobileOrientationGua
 import { Trophy } from 'lucide-react';
 import { CombatAIDebugSnapshot } from './game/ai/CombatDirector';
 import { RadoxomEconomyManager } from './game/systems/RadoxomEconomyManager';
+import { ViewportManager } from './game/systems/ViewportManager';
+import { QuestionHistoryManager } from './educational/QuestionPoolEngine';
+import { PauseModal } from './components/menus/PauseModal';
 
 export const App: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -49,6 +52,7 @@ export const App: React.FC = () => {
     icon: string;
   } | null>(null);
   const [showPuzzleGateModal, setShowPuzzleGateModal] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
   const [achievementToast, setAchievementToast] = useState<{ id: string; title: string } | null>(null);
 
   // Real-time Combat & Radoxom state
@@ -95,7 +99,11 @@ export const App: React.FC = () => {
 
       if (e.code === 'Escape') {
         if (currentScreen === 'EXPLORATION' || currentScreen === 'COMBAT' || currentScreen === 'REALTIME_COMBAT') {
-          setShowSettings(prev => !prev);
+          setShowPauseModal((prev) => {
+            const next = !prev;
+            if (engineRef.current) engineRef.current.isPaused = next;
+            return next;
+          });
         }
       }
 
@@ -149,16 +157,17 @@ export const App: React.FC = () => {
     }
   };
 
-  // Initialize or update canvas game engine
+  // Initialize or update canvas game engine with centralized ViewportManager
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const viewportMgr = ViewportManager.getInstance();
+    const { width, height, dpr } = viewportMgr.applyToCanvas(canvas);
 
     const engine = new GameEngine(canvas, activeLevelConfig);
     engineRef.current = engine;
+    engine.handleResize(width, height, dpr);
     engine.hero.setSkill(activeSkill);
 
     engine.onEncounter = () => {
@@ -243,57 +252,38 @@ export const App: React.FC = () => {
       setShowPuzzleGateModal(true);
     };
 
-    engine.handleResize(canvas.width, canvas.height);
     engine.start();
 
-    const handleResize = () => {
-      if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        engine.handleResize(canvas.width, canvas.height);
+    // Centralized viewport resize subscription: never loses state on orientation change or browser bar animation
+    const unsubscribeViewport = viewportMgr.subscribe(() => {
+      if (canvasRef.current && engineRef.current) {
+        const sz = viewportMgr.applyToCanvas(canvasRef.current);
+        engineRef.current.handleResize(sz.width, sz.height, sz.dpr);
       }
-    };
-    window.addEventListener('resize', handleResize);
+    });
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      unsubscribeViewport();
       engine.destroy();
     };
   }, [currentLevelId]);
 
-  // Dynamic question resolver with fresh questions on retry
+  // Dynamic question resolver with fresh questions on retry (Zero Repetition Engine)
   const [activeQuestionSet, setActiveQuestionSet] = useState<Question[]>([]);
 
-  // Function to generate fresh question set (mathematically ensures enough questions to defeat monster + margin)
-  const generateFreshQuestions = (config: LevelConfig, excludeIds?: Set<string>): Question[] => {
-    const allQuestions: Question[] = config.questionIds
-      .map((id) => QUESTION_BANK[id])
-      .filter(Boolean);
-
-    let candidates = allQuestions;
-    if (excludeIds && excludeIds.size > 0) {
-      const unused = allQuestions.filter((q) => !excludeIds.has(q.id));
-      if (unused.length >= 2) {
-        candidates = unused;
-      }
-    }
-
-    // Shuffle question pool to guarantee fresh equivalent questions on retry, with randomized option order
-    const shuffled = [...candidates].sort(() => Math.random() - 0.5).map(shuffleQuestion);
+  const generateFreshQuestions = (config: LevelConfig, count?: number, isRetry: boolean = false): Question[] => {
     const minHits = Math.ceil(config.monster.hp / 50);
-    // Guarantee at least minHits + 1 questions, up to full pool
-    const targetCount = Math.min(shuffled.length, Math.max(5, minHits + 1));
-    return shuffled.slice(0, targetCount);
+    const targetCount = count ?? Math.max(5, minHits + 1);
+    return QuestionHistoryManager.getInstance().getFreshQuestionSet(config, targetCount, isRetry);
   };
 
   useEffect(() => {
-    setActiveQuestionSet(generateFreshQuestions(activeLevelConfig));
+    setActiveQuestionSet(generateFreshQuestions(activeLevelConfig, undefined, false));
   }, [activeLevelConfig]);
 
-  const levelQuestions = (activeQuestionSet.length > 0
+  const levelQuestions = activeQuestionSet.length > 0
     ? activeQuestionSet
-    : activeLevelConfig.questionIds.map((id) => QUESTION_BANK[id]).filter(Boolean)
-  ).map(shuffleQuestion);
+    : generateFreshQuestions(activeLevelConfig, undefined, false);
 
   const activeQuestion: Question =
     levelQuestions[currentQuestionIndex % Math.max(1, levelQuestions.length)] ||
@@ -314,7 +304,10 @@ export const App: React.FC = () => {
     setIsRetrySession(false);
     setRetryTargetNeeded(0);
     setRetryExistingAmmo(0);
-    setUsedQuestionIds(new Set());
+    setShowPauseModal(false);
+
+    // Reset question history for this level to start fresh on a new level journey
+    QuestionHistoryManager.getInstance().resetLevel(levelId);
 
     // Initialize authoritative attempt in economy manager
     RadoxomEconomyManager.getInstance().startLevelAttempt(
@@ -323,10 +316,14 @@ export const App: React.FC = () => {
       config.questionIds.length
     );
 
-    setActiveQuestionSet(generateFreshQuestions(config));
+    const minHits = Math.ceil(config.monster.hp / 50);
+    const freshQuestions = QuestionHistoryManager.getInstance().getFreshQuestionSet(config, Math.max(5, minHits + 1), false);
+    setActiveQuestionSet(freshQuestions);
 
     if (engineRef.current) {
+      engineRef.current.isPaused = false;
       engineRef.current.setLevel(config);
+      engineRef.current.hero.setSkill(activeSkill);
     }
 
     setCurrentScreen('ARIA_LESSON');
@@ -347,6 +344,7 @@ export const App: React.FC = () => {
     setCurrentScreen('REALTIME_COMBAT');
     setMonsterCurrentHp(activeLevelConfig.monster.hp);
     if (engineRef.current) {
+      engineRef.current.isPaused = false;
       engineRef.current.startRealtimeCombat(radoxomsAvailable);
     }
   };
@@ -354,20 +352,18 @@ export const App: React.FC = () => {
   const handleRetryCombat = () => {
     GameStateManager.getInstance().healFull();
     setMonsterCurrentHp(activeLevelConfig.monster.hp);
+    setShowPauseModal(false);
 
     const { targetToRecover, existingRemaining } = RadoxomEconomyManager.getInstance().prepareRetryAttempt();
 
     if (targetToRecover > 0) {
-      // Player spent ammo in combat: must recover missing ammo via fresh questions!
+      // Player spent ammo in combat: must recover missing ammo via 100% fresh questions!
       setIsRetrySession(true);
       setRetryTargetNeeded(targetToRecover);
       setRetryExistingAmmo(existingRemaining);
 
-      const newUsed = new Set(usedQuestionIds);
-      activeQuestionSet.forEach((q) => newUsed.add(q.id));
-      setUsedQuestionIds(newUsed);
-
-      const freshQuestions = generateFreshQuestions(activeLevelConfig, newUsed);
+      // Select completely new question IDs, avoiding any previous questions
+      const freshQuestions = QuestionHistoryManager.getInstance().getFreshQuestionSet(activeLevelConfig, targetToRecover, true);
       setActiveQuestionSet(freshQuestions);
       setCurrentQuestionIndex(0);
       setCurrentScreen('QUESTION_SESSION');
@@ -376,13 +372,14 @@ export const App: React.FC = () => {
       setRadoxomsAvailable(existingRemaining);
       setCurrentScreen('REALTIME_COMBAT');
       if (engineRef.current) {
+        engineRef.current.isPaused = false;
         engineRef.current.startRealtimeCombat(existingRemaining);
       }
     }
   };
 
   const handleRePracticeQuestions = () => {
-    // Re-practice all questions from scratch
+    // Re-practice all questions with fresh question selection
     RadoxomEconomyManager.getInstance().startLevelAttempt(
       activeLevelConfig.id,
       activeLevelConfig.topic || 'arrays',
@@ -393,7 +390,11 @@ export const App: React.FC = () => {
     setIsRetrySession(false);
     setRetryTargetNeeded(0);
     setRetryExistingAmmo(0);
-    setActiveQuestionSet(generateFreshQuestions(activeLevelConfig));
+    setShowPauseModal(false);
+
+    const minHits = Math.ceil(activeLevelConfig.monster.hp / 50);
+    const freshQuestions = QuestionHistoryManager.getInstance().getFreshQuestionSet(activeLevelConfig, Math.max(5, minHits + 1), true);
+    setActiveQuestionSet(freshQuestions);
     setCurrentQuestionIndex(0);
     setCurrentScreen('QUESTION_SESSION');
   };
@@ -558,6 +559,10 @@ export const App: React.FC = () => {
             }}
             onOpenSettings={() => setShowSettings(true)}
             onOpenLevelSelect={() => setShowLevelSelect(true)}
+            onPause={() => {
+              setShowPauseModal(true);
+              if (engineRef.current) engineRef.current.isPaused = true;
+            }}
           />
           {currentScreen === 'EXPLORATION' && <ControlsBar />}
         </>
@@ -582,6 +587,15 @@ export const App: React.FC = () => {
       {currentScreen === 'MAIN_MENU' && (
         <MainMenu
           hasSavedGame={gameState.completedLevels.length > 0 || gameState.playerStats.level > 1}
+          playerStats={gameState.playerStats}
+          completedLevelsCount={gameState.completedLevels.length}
+          unlockedLevelId={gameState.unlockedLevelId}
+          isMuted={gameState.settings.muted}
+          onToggleMute={() => {
+            const nextMute = !gameState.settings.muted;
+            SoundManager.getInstance().setMuted(nextMute);
+            GameStateManager.getInstance().updateSettings({ muted: nextMute });
+          }}
           onStartNewGame={() => startLevelJourney(1)}
           onResumeGame={() => startLevelJourney(gameState.currentLevelId)}
           onOpenLevelSelect={() => setShowLevelSelect(true)}
@@ -672,6 +686,10 @@ export const App: React.FC = () => {
           monsterMaxDodgeCharges={engineRef.current?.monster?.director?.maxDodgeCharges ?? 1}
           debugSnapshot={aiDebugSnapshot}
           onToggleAIDebug={() => engineRef.current?.toggleAIDebugOverlay()}
+          onPause={() => {
+            setShowPauseModal(true);
+            if (engineRef.current) engineRef.current.isPaused = true;
+          }}
         />
       )}
 
@@ -790,6 +808,28 @@ export const App: React.FC = () => {
             setCurrentScreen('MAIN_MENU');
           }}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {/* Modal: PAUSE MENU */}
+      {showPauseModal && (
+        <PauseModal
+          onResume={() => {
+            setShowPauseModal(false);
+            if (engineRef.current) {
+              engineRef.current.isPaused = false;
+            }
+          }}
+          onRestartLevel={handleRestartLevel}
+          onOpenSettings={() => setShowSettings(true)}
+          onQuitToMenu={() => {
+            setShowPauseModal(false);
+            if (engineRef.current) {
+              engineRef.current.isPaused = false;
+              engineRef.current.isRealTimeCombat = false;
+            }
+            setCurrentScreen('MAIN_MENU');
+          }}
         />
       )}
     </div>

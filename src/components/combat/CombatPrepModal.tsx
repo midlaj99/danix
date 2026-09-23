@@ -164,6 +164,9 @@ export const CombatPrepModal: React.FC<CombatPrepModalProps> = ({
                     <span className="text-yellow-300 font-bold">Fire Radoxom</span>
                   </div>
                 </div>
+                <div className="text-[10px] text-amber-400/90 font-sans italic pt-1 text-center">
+                  📱 Mobile: Use on-screen Virtual Joystick & Action Buttons
+                </div>
               </div>
             </div>
           </div>

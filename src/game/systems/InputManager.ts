@@ -37,9 +37,14 @@ export class InputManager {
 
   public isEnabled: boolean = true;
   public isTouchMode: boolean = false;
+  public mobileAimAngle: number | null = null;
+  public isAiming: boolean = false;
+
   public autoAimTarget: { x: number; y: number } | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private cameraX: number = 0;
+  private cameraY: number = 0;
+  private cameraZoom: number = 1.0;
 
   private constructor() {
     this.setupListeners();
@@ -68,9 +73,15 @@ export class InputManager {
     }
   }
 
-  public setCameraX(cameraX: number) {
+  public setCameraTransform(cameraX: number, cameraY: number = 0, zoom: number = 1.0) {
     this.cameraX = cameraX;
+    this.cameraY = cameraY;
+    this.cameraZoom = Math.max(0.2, zoom);
     this.updateWorldMouse();
+  }
+
+  public setCameraX(cameraX: number) {
+    this.setCameraTransform(cameraX, this.cameraY, this.cameraZoom);
   }
 
   public setAutoAimTarget(worldX: number, worldY: number) {
@@ -81,13 +92,55 @@ export class InputManager {
     this.autoAimTarget = null;
   }
 
+  /**
+   * Sets mobile aim vector from right drag touch or aim control.
+   */
+  public setMobileAimVector(dx: number, dy: number) {
+    this.isTouchMode = true;
+    const len = Math.hypot(dx, dy);
+    if (len > 0.15) {
+      this.isAiming = true;
+      this.mobileAimAngle = Math.atan2(dy, dx);
+    } else {
+      this.isAiming = false;
+      this.mobileAimAngle = null;
+    }
+  }
+
+  public clearMobileAim() {
+    this.isAiming = false;
+    this.mobileAimAngle = null;
+  }
+
+  /**
+   * Fair aim assist: applies a subtle magnetic pull towards target ONLY if aiming in the general direction.
+   * Never forces guaranteed hits or auto-lock.
+   */
+  public applyFairAimAssist(rawAngle: number, targetAngle: number): number {
+    let diff = targetAngle - rawAngle;
+    // Normalize diff between -PI and PI
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+
+    const targetingCone = 0.48; // ~28 degrees cone
+    const maxCorrection = 0.22; // ~12 degrees max correction
+    const magnetismStrength = 0.38; // 38% subtle pull
+
+    if (Math.abs(diff) < targetingCone) {
+      const correction = Math.sign(diff) * Math.min(Math.abs(diff) * magnetismStrength, maxCorrection);
+      return rawAngle + correction;
+    }
+
+    return rawAngle;
+  }
+
   public setVirtualJoystick(dx: number, dy: number) {
     this.isTouchMode = true;
-    // Horizontal movement deadzone: 0.18
-    if (dx < -0.18) {
+    // Horizontal movement deadzone: 0.15
+    if (dx < -0.15) {
       this.keys.left = true;
       this.keys.right = false;
-    } else if (dx > 0.18) {
+    } else if (dx > 0.15) {
       this.keys.right = true;
       this.keys.left = false;
     } else {
@@ -95,8 +148,8 @@ export class InputManager {
       this.keys.right = false;
     }
 
-    // Vertical swipe up for jump: -0.45
-    if (dy < -0.45) {
+    // Vertical swipe up for jump
+    if (dy < -0.42) {
       if (!this.keys.jump) {
         this.justJumped = true;
       }
@@ -172,6 +225,8 @@ export class InputManager {
     this.justAttacked = false;
     this.justDodged = false;
     this.justJumped = false;
+    this.isAiming = false;
+    this.mobileAimAngle = null;
   }
 
   private set down(val: boolean) {
@@ -208,8 +263,8 @@ export class InputManager {
     const touch = e.touches[0];
     if (!touch) return;
     const rect = this.canvas.getBoundingClientRect();
-    this.mouseScreenX = (touch.clientX - rect.left) * (this.canvas.width / (rect.width || 1));
-    this.mouseScreenY = (touch.clientY - rect.top) * (this.canvas.height / (rect.height || 1));
+    this.mouseScreenX = touch.clientX - rect.left;
+    this.mouseScreenY = touch.clientY - rect.top;
     this.updateWorldMouse();
     this.isTouchMode = true;
   };
@@ -219,8 +274,8 @@ export class InputManager {
     const touch = e.touches[0];
     if (!touch) return;
     const rect = this.canvas.getBoundingClientRect();
-    this.mouseScreenX = (touch.clientX - rect.left) * (this.canvas.width / (rect.width || 1));
-    this.mouseScreenY = (touch.clientY - rect.top) * (this.canvas.height / (rect.height || 1));
+    this.mouseScreenX = touch.clientX - rect.left;
+    this.mouseScreenY = touch.clientY - rect.top;
     this.updateWorldMouse();
   };
 
@@ -229,7 +284,6 @@ export class InputManager {
   };
 
   private handleKeyDown = (e: KeyboardEvent) => {
-    // Ignore input if typing in forms
     if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
 
     if (!this.isEnabled) return;
@@ -277,8 +331,8 @@ export class InputManager {
   private handleMouseMove = (e: MouseEvent) => {
     if (this.canvas) {
       const rect = this.canvas.getBoundingClientRect();
-      this.mouseScreenX = (e.clientX - rect.left) * (this.canvas.width / (rect.width || 1));
-      this.mouseScreenY = (e.clientY - rect.top) * (this.canvas.height / (rect.height || 1));
+      this.mouseScreenX = e.clientX - rect.left;
+      this.mouseScreenY = e.clientY - rect.top;
     } else {
       this.mouseScreenX = e.clientX;
       this.mouseScreenY = e.clientY;
@@ -306,17 +360,16 @@ export class InputManager {
   };
 
   private handleBlur = () => {
-    // Safely prevent stuck keys when switching tabs or window loses focus
     this.resetKeys();
   };
 
   private updateWorldMouse() {
-    this.mouseWorldX = this.mouseScreenX + this.cameraX;
-    this.mouseWorldY = this.mouseScreenY;
+    // Screen coords to World coords using Camera transformation
+    this.mouseWorldX = this.mouseScreenX / this.cameraZoom + this.cameraX;
+    this.mouseWorldY = this.mouseScreenY / this.cameraZoom + this.cameraY;
   }
 
   public endFrame() {
-    // Clear one-shot triggers at end of game frame
     this.justClicked = false;
     this.justAttacked = false;
     this.justDodged = false;
