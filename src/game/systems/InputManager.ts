@@ -93,12 +93,13 @@ export class InputManager {
   }
 
   /**
-   * Sets mobile aim vector from right drag touch or aim control.
+   * Sets mobile aim vector from right drag touch or aim pad.
+   * Pure player-controlled aiming without auto-lock or magnetic cheat.
    */
   public setMobileAimVector(dx: number, dy: number) {
     this.isTouchMode = true;
     const len = Math.hypot(dx, dy);
-    if (len > 0.15) {
+    if (len > 0.1) {
       this.isAiming = true;
       this.mobileAimAngle = Math.atan2(dy, dx);
     } else {
@@ -113,30 +114,32 @@ export class InputManager {
   }
 
   /**
-   * Fair aim assist: applies a subtle magnetic pull towards target ONLY if aiming in the general direction.
-   * Never forces guaranteed hits or auto-lock.
+   * Dedicated Virtual Direction Controls for Physical Arrow Buttons:
+   * Left, Right, Up (Jump/Climb), Down (Drop/Slide).
    */
-  public applyFairAimAssist(rawAngle: number, targetAngle: number): number {
-    let diff = targetAngle - rawAngle;
-    // Normalize diff between -PI and PI
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-
-    const targetingCone = 0.48; // ~28 degrees cone
-    const maxCorrection = 0.22; // ~12 degrees max correction
-    const magnetismStrength = 0.38; // 38% subtle pull
-
-    if (Math.abs(diff) < targetingCone) {
-      const correction = Math.sign(diff) * Math.min(Math.abs(diff) * magnetismStrength, maxCorrection);
-      return rawAngle + correction;
+  public setVirtualDirection(dir: 'left' | 'right' | 'up' | 'down', active: boolean) {
+    this.isTouchMode = true;
+    if (dir === 'left') {
+      this.keys.left = active;
+      if (active) this.keys.right = false;
+    } else if (dir === 'right') {
+      this.keys.right = active;
+      if (active) this.keys.left = false;
+    } else if (dir === 'up') {
+      this.keys.up = active;
+      if (active) {
+        if (!this.keys.jump) this.justJumped = true;
+        this.keys.jump = true;
+      } else {
+        this.keys.jump = false;
+      }
+    } else if (dir === 'down') {
+      this.keys.down = active;
     }
-
-    return rawAngle;
   }
 
   public setVirtualJoystick(dx: number, dy: number) {
     this.isTouchMode = true;
-    // Horizontal movement deadzone: 0.15
     if (dx < -0.15) {
       this.keys.left = true;
       this.keys.right = false;
@@ -148,7 +151,6 @@ export class InputManager {
       this.keys.right = false;
     }
 
-    // Vertical swipe up for jump
     if (dy < -0.42) {
       if (!this.keys.jump) {
         this.justJumped = true;

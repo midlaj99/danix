@@ -10,6 +10,7 @@ import { GameStateManager } from '../state/GameState';
 import { InputManager } from './systems/InputManager';
 import { CombatAIDebugSnapshot } from './ai/CombatDirector';
 import { RadoxomEconomyManager } from './systems/RadoxomEconomyManager';
+import { ViewportManager } from './systems/ViewportManager';
 
 interface AmbientParticle {
   x: number;
@@ -91,6 +92,7 @@ export class GameEngine {
   public mouseX: number = 0;
   public mouseY: number = 0;
   private ammoExhaustionTimer: number = 0;
+  public aimIndicatorAlpha: number = 0;
   public hazardZones: ArenaHazardZone[] = [];
   public combatDurationTimer: number = 0;
 
@@ -351,9 +353,9 @@ export class GameEngine {
 
     const startX = this.hero.x + (this.hero.facingRight ? 35 : -10);
     const startY = this.hero.y + this.hero.height / 2 - 8;
-    const targetWorldX = this.mouseX + this.cameraX;
-    const targetWorldY = this.mouseY;
-    const aimAngle = Math.atan2(targetWorldY - startY, targetWorldX - startX);
+    const aimAngle = this.hero.aimAngle;
+    const targetWorldX = startX + Math.cos(aimAngle) * 550;
+    const targetWorldY = startY + Math.sin(aimAngle) * 550;
 
     // Guaranteed attack: if in real-time combat and has ammo -> fire Radoxom
     if (this.isRealTimeCombat && this.radoxomsAvailable > 0) {
@@ -676,34 +678,25 @@ export class GameEngine {
     this.mouseX = this.input.mouseScreenX;
     this.mouseY = this.input.mouseScreenY;
 
-    // Direct aim angle towards world mouse cursor or fair aim assist
+    // Direct aim angle: player controls aiming (no auto-aim lock/cheat)
     const heroCenterX = this.hero.x + this.hero.width / 2;
     const heroCenterY = this.hero.y + this.hero.height / 2;
 
-    if (this.isRealTimeCombat && this.monster && !this.monster.isDefeated) {
-      const mCenterX = this.monster.x + this.monster.width / 2;
-      const mCenterY = this.monster.y + this.monster.height / 2;
-      this.input.setAutoAimTarget(mCenterX, mCenterY);
-      const angleToMonster = Math.atan2(mCenterY - heroCenterY, mCenterX - heroCenterX);
-
-      if (this.input.isAiming && this.input.mobileAimAngle !== null) {
-        // Player is actively dragging aim vector on mobile touch controls
-        this.hero.aimAngle = this.input.applyFairAimAssist(this.input.mobileAimAngle, angleToMonster);
-      } else if (this.input.isTouchMode) {
-        // Default touch aim: points in facing direction, with fair soft magnetic guidance if in front
-        const facingAngle = this.hero.facingRight ? 0 : Math.PI;
-        this.hero.aimAngle = this.input.applyFairAimAssist(facingAngle, angleToMonster);
-      } else {
-        // Desktop mouse aim
-        this.hero.aimAngle = Math.atan2(this.input.mouseWorldY - heroCenterY, this.input.mouseWorldX - heroCenterX);
-      }
-    } else {
-      this.input.clearAutoAimTarget();
+    if (this.input.isTouchMode) {
       if (this.input.isAiming && this.input.mobileAimAngle !== null) {
         this.hero.aimAngle = this.input.mobileAimAngle;
+        this.hero.facingRight = Math.cos(this.hero.aimAngle) >= 0;
+        this.aimIndicatorAlpha = Math.min(1, this.aimIndicatorAlpha + dt * 8);
       } else {
-        this.hero.aimAngle = Math.atan2(this.input.mouseWorldY - heroCenterY, this.input.mouseWorldX - heroCenterX);
+        // When not actively dragging aim, default facing direction & smoothly fade indicator
+        this.hero.aimAngle = this.hero.facingRight ? 0 : Math.PI;
+        this.aimIndicatorAlpha = Math.max(0, this.aimIndicatorAlpha - dt * 6);
       }
+    } else {
+      // Desktop mouse aim: accurate world mouse coordinates!
+      this.hero.aimAngle = Math.atan2(this.input.mouseWorldY - heroCenterY, this.input.mouseWorldX - heroCenterX);
+      this.hero.facingRight = this.input.mouseWorldX >= heroCenterX;
+      this.aimIndicatorAlpha = this.isRealTimeCombat ? 1 : 0;
     }
 
     // Synchronize keys from InputManager
@@ -917,22 +910,15 @@ export class GameEngine {
       if (this.monster) {
         const isPortrait = this.viewportHeight > this.viewportWidth;
         const dist = Math.abs(this.hero.x - this.monster.x);
-        const padding = isPortrait ? 220 : 320;
-        const combatSpan = Math.max(650, dist + padding);
-
-        // Adaptive Combat Zoom
-        const availableW = this.viewportWidth * (isPortrait ? 0.94 : 0.88);
-        const fitZoomX = availableW / combatSpan;
-        const fitZoomY = (this.viewportHeight * (isPortrait ? 0.60 : 0.72)) / 480;
-        const targetZoom = Math.min(isPortrait ? 0.85 : 1.1, Math.max(isPortrait ? 0.48 : 0.62, Math.min(fitZoomX, fitZoomY)));
-
-        this.targetCameraZoom = targetZoom;
+        
+        // Dynamically compute zoom via centralized ViewportManager (anti-cramp, expansive arena)
+        this.targetCameraZoom = ViewportManager.getInstance().getCameraZoom('combat', dist);
         this.cameraZoom += (this.targetCameraZoom - this.cameraZoom) * 0.08;
 
         const midX = (this.hero.x + this.monster.x) / 2;
         const halfVisibleW = (this.viewportWidth / 2) / this.cameraZoom;
         const targetCameraX = Math.max(0, Math.min(midX - halfVisibleW, this.worldWidth - halfVisibleW * 2));
-        const targetCameraY = this.groundY - (this.viewportHeight * (isPortrait ? 0.46 : 0.52)) / this.cameraZoom;
+        const targetCameraY = this.groundY - (this.viewportHeight * (isPortrait ? 0.48 : 0.58)) / this.cameraZoom;
 
         this.cameraX += (targetCameraX - this.cameraX) * 0.12;
         this.cameraY += (targetCameraY - this.cameraY) * 0.12;
@@ -1019,17 +1005,17 @@ export class GameEngine {
         }
       }
 
-      // Exploration camera follow & zoom
+      // Exploration camera follow & expansive world zoom
       const isPortrait = this.viewportHeight > this.viewportWidth;
-      this.targetCameraZoom = isPortrait ? 0.72 : 1.0;
-      this.cameraZoom += (this.targetCameraZoom - this.cameraZoom) * 0.1;
+      this.targetCameraZoom = ViewportManager.getInstance().getCameraZoom('exploration');
+      this.cameraZoom += (this.targetCameraZoom - this.cameraZoom) * 0.08;
 
       const halfVisibleW = (this.viewportWidth / 2) / this.cameraZoom;
       let targetCameraX = Math.max(
         0,
-        Math.min(this.hero.x - halfVisibleW * 0.6, this.worldWidth - halfVisibleW * 2)
+        Math.min(this.hero.x - halfVisibleW * 0.5, this.worldWidth - halfVisibleW * 2)
       );
-      let targetCameraY = this.groundY - (this.viewportHeight * 0.52) / this.cameraZoom;
+      let targetCameraY = this.groundY - (this.viewportHeight * (isPortrait ? 0.50 : 0.58)) / this.cameraZoom;
 
       if (this.isCinematicIntro && this.monster) {
         targetCameraX = Math.max(0, this.monster.x - halfVisibleW);
@@ -1134,64 +1120,57 @@ export class GameEngine {
   }
 
   /* --- REAL-TIME COMBAT GRAPHICS: RETICLE & ARENA BARRIERS --- */
+  /* --- REAL-TIME COMBAT GRAPHICS: CLEAN ACTION-GAME AIM INDICATOR --- */
   private renderAimReticleWorld(ctx: CanvasRenderingContext2D) {
+    if (this.aimIndicatorAlpha <= 0.01) return;
+
     const heroCenterX = this.hero.x + this.hero.width / 2;
     const heroCenterY = this.hero.y + this.hero.height / 2;
+    const angle = this.hero.aimAngle;
+    const alpha = this.aimIndicatorAlpha;
 
-    let rx: number;
-    let ry: number;
-
-    if (this.input.isTouchMode) {
-      // In touch mode, reticle sits along the aim direction ahead of the hero
-      rx = heroCenterX + Math.cos(this.hero.aimAngle) * 140;
-      ry = heroCenterY + Math.sin(this.hero.aimAngle) * 140;
-    } else {
-      rx = this.input.mouseWorldX;
-      ry = this.input.mouseWorldY;
-    }
-
-    const time = performance.now() * 0.004;
     ctx.save();
-    ctx.translate(rx, ry);
+    ctx.globalAlpha = alpha;
 
-    // Subtle aim guide line from hero to reticle on touch
-    if (this.input.isTouchMode && this.hero.radoxomAmmoCount > 0) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 6]);
-      ctx.beginPath();
-      ctx.moveTo(heroCenterX - rx, heroCenterY - ry);
-      ctx.lineTo(0, 0);
-      ctx.stroke();
-      ctx.restore();
-    }
+    // Clean action-game aim trajectory line (40px to 140px ahead of hero)
+    const lineStart = 38;
+    const lineEnd = 135;
+    const sx = heroCenterX + Math.cos(angle) * lineStart;
+    const sy = heroCenterY + Math.sin(angle) * lineStart;
+    const ex = heroCenterX + Math.cos(angle) * lineEnd;
+    const ey = heroCenterY + Math.sin(angle) * lineEnd;
 
-    // Rotating outer ring
-    ctx.rotate(time);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
-    ctx.lineWidth = 2;
+    // Glowing energy gradient line
+    const grad = ctx.createLinearGradient(sx, sy, ex, ey);
+    grad.addColorStop(0, 'rgba(56, 189, 248, 0.2)');
+    grad.addColorStop(0.65, 'rgba(56, 189, 248, 0.75)');
+    grad.addColorStop(1, 'rgba(250, 204, 21, 0.95)');
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash([7, 5]);
     ctx.beginPath();
-    ctx.arc(0, 0, 18, 0, Math.PI * 2);
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
     ctx.stroke();
 
-    // 4 crosshair dashes
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 2.5;
-    for (let i = 0; i < 4; i++) {
-      const a = (i * Math.PI) / 2;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
-      ctx.lineTo(Math.cos(a) * 22, Math.sin(a) * 22);
-      ctx.stroke();
-    }
+    // Directional energy chevron indicator at tip
+    ctx.save();
+    ctx.translate(ex, ey);
+    ctx.rotate(angle);
 
-    // Center pinpoint
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#facc15';
+    ctx.shadowColor = '#facc15';
+    ctx.shadowBlur = 8;
     ctx.beginPath();
-    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.moveTo(7, 0);
+    ctx.lineTo(-5, -4.5);
+    ctx.lineTo(-2, 0);
+    ctx.lineTo(-5, 4.5);
+    ctx.closePath();
     ctx.fill();
 
+    ctx.restore();
     ctx.restore();
   }
 

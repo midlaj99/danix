@@ -26,13 +26,12 @@ export const AriaDialogue: React.FC<AriaDialogueProps> = ({
     setIsTyping(true);
 
     const fullText = currentDialogue.text;
-    const baseSpeed = 24 / speedMultiplier;
+    const baseSpeed = 22 / speedMultiplier;
 
     const timer = setInterval(() => {
       charIndex++;
       setDisplayedText(fullText.substring(0, charIndex));
 
-      // Play soft chirp sound periodically
       if (charIndex % 3 === 0) {
         SoundManager.getInstance().playDialogueChirp();
       }
@@ -49,14 +48,13 @@ export const AriaDialogue: React.FC<AriaDialogueProps> = ({
   const handleNext = () => {
     SoundManager.getInstance().playUiClick();
     if (isTyping) {
-      // Instant reveal
       setDisplayedText(currentDialogue.text);
       setIsTyping(false);
       return;
     }
 
     if (currentIndex < dialogues.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
     } else {
       onComplete();
     }
@@ -68,69 +66,73 @@ export const AriaDialogue: React.FC<AriaDialogueProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center pb-8 px-4 bg-slate-950/40 backdrop-blur-sm animate-fade-in pointer-events-auto">
-      <div className="relative w-full max-w-4xl rpg-panel p-6 shadow-2xl flex flex-col md:flex-row items-center md:items-end gap-6 border-pink-500/40 shadow-pink-500/10">
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center pointer-events-auto select-none bg-slate-950/40 backdrop-blur-[2px] animate-fadeIn"
+      style={{
+        paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0.6rem))',
+        paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0.75rem))',
+        paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0.75rem))',
+      }}
+    >
+      {/* Semi-transparent Sleek Dialogue Panel (Game World Visible Behind) */}
+      <div className="relative w-full max-w-4xl bg-slate-950/88 border border-pink-500/50 rounded-2xl p-3 sm:p-4 shadow-[0_0_40px_rgba(236,72,153,0.2)] backdrop-blur-md flex items-center gap-3 sm:gap-5">
         {/* Aria High-Resolution Character Portrait */}
-        <div className="relative shrink-0 -mt-16 md:-mt-24 mb-2 md:mb-0">
-          <div className="w-32 h-32 md:w-44 md:h-44 rounded-2xl overflow-hidden border-3 border-pink-400/80 shadow-[0_0_25px_rgba(236,72,153,0.35)] bg-slate-900 flex items-center justify-center">
+        <div className="relative shrink-0 flex flex-col items-center">
+          <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-2xl overflow-hidden border-2 border-pink-400/90 shadow-[0_0_20px_rgba(236,72,153,0.35)] bg-slate-900 flex items-center justify-center">
             <img
               src="/aria.png"
               alt="Aria"
-              className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover object-top"
               onError={(e) => {
-                // Fallback to aria/aria.png if relative path differs
                 (e.target as HTMLImageElement).src = './aria/aria.png';
               }}
             />
           </div>
-
-          {/* Teacher Badge */}
-          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-rpg font-bold text-xs px-3 py-0.5 rounded-full shadow-md flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            ARIA
+          <div className="absolute -bottom-1.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-rpg font-bold text-[8.5px] px-2 py-0.2 rounded-full shadow-md flex items-center gap-0.5">
+            <Sparkles className="w-2.5 h-2.5" /> ARIA
           </div>
         </div>
 
-        {/* Dialogue Body & Content */}
-        <div className="flex-1 w-full flex flex-col justify-between min-h-[110px]">
-          {/* Top Info Bar */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-pink-400 font-rpg font-bold text-sm tracking-wide">
+        {/* Dialogue Body */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
+          {/* Header row */}
+          <div className="flex items-center justify-between border-b border-slate-800/80 pb-1 mb-1">
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="text-pink-400 font-rpg font-bold text-xs truncate">
                 Aria • Royal NumPy Arch-Mage
               </span>
-              <span className="text-[10px] text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-full">
-                Step {currentIndex + 1} of {dialogues.length}
+              <span className="text-[9px] text-slate-400 bg-slate-900 px-1.5 py-0.2 rounded font-mono">
+                {currentIndex + 1}/{dialogues.length}
               </span>
             </div>
 
             <button
               onClick={handleSkipAll}
-              className="text-[11px] text-slate-400 hover:text-pink-300 flex items-center gap-1 transition px-2 py-0.5 rounded hover:bg-slate-800/50 cursor-pointer"
+              className="text-[10px] text-slate-400 hover:text-pink-300 flex items-center gap-1 transition px-2 py-0.5 rounded hover:bg-slate-800/60 cursor-pointer"
             >
-              Skip Dialogue <FastForward className="w-3 h-3" />
+              Skip <FastForward className="w-3 h-3" />
             </button>
           </div>
 
           {/* Dialogue Text */}
-          <div className="text-slate-100 text-base md:text-lg leading-relaxed font-sans min-h-[55px] pr-2">
+          <div className="text-slate-100 text-xs sm:text-sm md:text-base leading-relaxed font-sans min-h-[42px] pr-1">
             {displayedText}
             {isTyping && <span className="typewriter-cursor inline-block text-pink-400 ml-0.5 font-bold" />}
           </div>
 
-          {/* Navigation Controls */}
-          <div className="flex items-center justify-end gap-3 mt-4 pt-2 border-t border-slate-800/60">
+          {/* Footer Action Button */}
+          <div className="flex items-center justify-end mt-1 pt-1">
             <button
               onClick={handleNext}
-              className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-rpg font-bold text-sm px-6 py-2 rounded-lg shadow-lg shadow-pink-500/20 flex items-center gap-2 transition transform active:scale-95 cursor-pointer"
+              className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-rpg font-bold text-xs sm:text-sm px-5 py-1.5 rounded-xl shadow-md shadow-pink-500/25 flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
             >
               {currentIndex < dialogues.length - 1 ? (
                 <>
-                  NEXT <ChevronRight className="w-4 h-4" />
+                  NEXT →
                 </>
               ) : (
                 <>
-                  BEGIN LESSON <Sparkles className="w-4 h-4" />
+                  BEGIN LESSON <Sparkles className="w-3.5 h-3.5" />
                 </>
               )}
             </button>

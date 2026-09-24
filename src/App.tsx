@@ -523,9 +523,19 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans">
-      {/* Mobile Horizontal Orientation Guard */}
-      <MobileOrientationGuard />
+    <div
+      className="game-shell relative w-full h-full overflow-hidden bg-slate-950 font-sans select-none"
+      style={{ width: '100vw', height: '100dvh', touchAction: 'none' }}
+    >
+      {/* Mobile Horizontal Orientation Guard & Fullscreen Start */}
+      <MobileOrientationGuard
+        onEnterGame={() => {
+          if (canvasRef.current && engineRef.current) {
+            const sz = ViewportManager.getInstance().applyToCanvas(canvasRef.current);
+            engineRef.current.handleResize(sz.width, sz.height, sz.dpr);
+          }
+        }}
+      />
 
       {/* 2D Canvas Game World */}
       <canvas

@@ -1,0 +1,26 @@
+{
+  "name": "DANIX — Real Action RPG",
+  "short_name": "DANIX",
+  "description": "Real Mobile Action RPG Game — NumPy Kingdom",
+  "start_url": "/",
+  "id": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/aria.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/aria.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "action", "education"]
+}
