@@ -1,6 +1,7 @@
 import { Question, LevelConfig } from '../types/curriculum';
 import { QUESTION_BANK } from './questionBank';
 import { shuffleQuestion } from './questionUtils';
+import { CURRICULUM_LEVELS } from './curriculumData';
 
 export interface ParameterizedVariantBlueprint {
   variantGroup: string;
@@ -26,24 +27,81 @@ export function validateQuestion(q: Question): boolean {
   return true;
 }
 
+export interface LevelGatedQuestion extends Question {
+  minLevel?: number;
+}
+
 /**
  * Procedural Question Variant Generator Factory
  * Generates verified parameter-varied NumPy questions for retry pools.
  */
-function createParameterizedVariants(): Question[] {
-  const variants: Question[] = [];
+function createParameterizedVariants(): LevelGatedQuestion[] {
+  const variants: LevelGatedQuestion[] = [];
 
-  // Group 1: Array creation with np.zeros, np.ones, np.full
+  // Group 0: Level 2 Creation & Dimension variants (1D, 2D, 3D ndim & len)
+  const creationCases = [
+    { code: 'np.array([5, 10, 15, 20])', ndim: 1, type: '1D vector' },
+    { code: 'np.array([1, 2, 3])', ndim: 1, type: '1D vector' },
+    { code: 'np.array([[10, 20], [30, 40]])', ndim: 2, type: '2D matrix' },
+    { code: 'np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])', ndim: 2, type: '2D matrix' },
+    { code: 'np.array([[[1, 2]], [[3, 4]]])', ndim: 3, type: '3D tensor' },
+    { code: 'np.array([[[1], [2]], [[3], [4]]])', ndim: 3, type: '3D tensor' },
+  ];
+
+  creationCases.forEach((c, idx) => {
+    const q: LevelGatedQuestion = {
+      id: `v_create_ndim_${idx}`,
+      topic: 'creation',
+      difficulty: 1,
+      minLevel: 2,
+      type: 'predict_output',
+      question: `What is the dimension (arr.ndim) of this ${c.type}?`,
+      codeSnippet: `import numpy as np\narr = ${c.code}\nprint(arr.ndim)`,
+      options: [`${c.ndim}`, `${c.ndim + 1}`, `${Math.max(1, c.ndim - 1)}`, `${c.ndim + 2}`],
+      correctAnswer: `${c.ndim}`,
+      hint: 'Count the square bracket nesting levels: [ is 1D, [[ is 2D, [[[ is 3D.',
+      explanation: `The array has ${c.ndim} dimension(s), so arr.ndim == ${c.ndim}.`,
+      requiredConcepts: ['array-creation', 'ndim'],
+    };
+    if (validateQuestion(q)) variants.push(q);
+  });
+
+  const lenCases = [
+    { code: 'np.array([[10, 20], [30, 40], [50, 60]])', rows: 3 },
+    { code: 'np.array([[1, 2, 3, 4], [5, 6, 7, 8]])', rows: 2 },
+    { code: 'np.array([[1], [2], [3], [4]])', rows: 4 },
+  ];
+
+  lenCases.forEach((lc, idx) => {
+    const q: LevelGatedQuestion = {
+      id: `v_create_len_${idx}`,
+      topic: 'creation',
+      difficulty: 1,
+      minLevel: 2,
+      type: 'predict_output',
+      question: `What is len(arr) for this 2D array?`,
+      codeSnippet: `import numpy as np\narr = ${lc.code}\nprint(len(arr))`,
+      options: [`${lc.rows}`, `${lc.rows + 1}`, `${Math.max(1, lc.rows - 1)}`, 'Error'],
+      correctAnswer: `${lc.rows}`,
+      hint: 'In Python and NumPy, len(arr) on a 2D matrix returns the number of rows.',
+      explanation: `len(arr) on a 2D array returns the length of axis 0 (the number of rows), which is ${lc.rows}.`,
+      requiredConcepts: ['array-creation', 'len'],
+    };
+    if (validateQuestion(q)) variants.push(q);
+  });
+
+  // Group 1: Array creation with np.zeros, np.ones, np.full (Level 8 Special Arrays & Level 3 Attributes)
   const shapes: [number, number][] = [
     [2, 3], [3, 2], [4, 2], [2, 4], [3, 5], [5, 3], [4, 4], [2, 6], [3, 3], [6, 2]
   ];
 
   shapes.forEach(([r, c], idx) => {
-    // Zeros shape variant
-    const zerosQ: Question = {
+    // Zeros shape variant (Level 8+)
+    const zerosQ: LevelGatedQuestion = {
       id: `v_zeros_${r}_${c}`,
       topic: 'creation',
       difficulty: 1,
+      minLevel: 8,
       type: 'shape_prediction',
       question: `What is the output of np.zeros((${r}, ${c})).shape?`,
       codeSnippet: `import numpy as np\narr = np.zeros((${r}, ${c}))\nprint(arr.shape)`,
@@ -55,11 +113,12 @@ function createParameterizedVariants(): Question[] {
     };
     if (validateQuestion(zerosQ)) variants.push(zerosQ);
 
-    // Ones total elements (size) variant
-    const onesQ: Question = {
+    // Ones total elements (size) variant (Level 3+)
+    const onesQ: LevelGatedQuestion = {
       id: `v_ones_size_${r}_${c}`,
       topic: 'shape',
       difficulty: 1,
+      minLevel: 3,
       type: 'predict_output',
       question: `What is the total number of elements (arr.size) in np.ones((${r}, ${c}))?`,
       codeSnippet: `import numpy as np\narr = np.ones((${r}, ${c}))\nprint(arr.size)`,
@@ -71,12 +130,13 @@ function createParameterizedVariants(): Question[] {
     };
     if (validateQuestion(onesQ)) variants.push(onesQ);
 
-    // Full fill-value variant
+    // Full fill-value variant (Level 8+)
     const fillVal = (idx * 3 + 4) % 10 + 2;
-    const fullQ: Question = {
+    const fullQ: LevelGatedQuestion = {
       id: `v_full_${r}_${c}_${fillVal}`,
       topic: 'creation',
       difficulty: 2,
+      minLevel: 8,
       type: 'predict_output',
       question: `What does np.full((${r}, ${c}), ${fillVal})[0, 0] evaluate to?`,
       codeSnippet: `import numpy as np\narr = np.full((${r}, ${c}), ${fillVal})\nprint(arr[0, 0])`,
@@ -89,7 +149,7 @@ function createParameterizedVariants(): Question[] {
     if (validateQuestion(fullQ)) variants.push(fullQ);
   });
 
-  // Group 2: np.arange with varied start, stop, step
+  // Group 2: np.arange with varied start, stop, step (Level 9 Ranges)
   const arangeCases = [
     { start: 0, stop: 10, step: 2, count: 5, expected: '[0 2 4 6 8]' },
     { start: 1, stop: 10, step: 2, count: 5, expected: '[1 3 5 7 9]' },
@@ -102,10 +162,11 @@ function createParameterizedVariants(): Question[] {
   ];
 
   arangeCases.forEach((c, idx) => {
-    const q: Question = {
+    const q: LevelGatedQuestion = {
       id: `v_arange_${c.start}_${c.stop}_${c.step}`,
-      topic: 'creation',
+      topic: 'ranges',
       difficulty: 1,
+      minLevel: 9,
       type: 'predict_output',
       question: `What is the length (len) of np.arange(${c.start}, ${c.stop}, ${c.step})?`,
       codeSnippet: `import numpy as np\narr = np.arange(${c.start}, ${c.stop}, ${c.step})\nprint(len(arr))`,
@@ -118,7 +179,7 @@ function createParameterizedVariants(): Question[] {
     if (validateQuestion(q)) variants.push(q);
   });
 
-  // Group 3: 1D Slicing variants
+  // Group 3: 1D Slicing variants (Level 6+)
   const sliceCases = [
     { start: 1, stop: 4, expected: '[20 30 40]' },
     { start: 0, stop: 3, expected: '[10 20 30]' },
@@ -129,10 +190,11 @@ function createParameterizedVariants(): Question[] {
   ];
 
   sliceCases.forEach((s, idx) => {
-    const q: Question = {
+    const q: LevelGatedQuestion = {
       id: `v_slice_${s.start}_${s.stop}`,
       topic: 'slicing',
       difficulty: 2,
+      minLevel: 6,
       type: 'predict_output',
       question: `What does arr[${s.start}:${s.stop}] return for arr = np.array([10, 20, 30, 40, 50, 60])?`,
       codeSnippet: `import numpy as np\narr = np.array([10, 20, 30, 40, 50, 60])\nprint(arr[${s.start}:${s.stop}])`,
@@ -145,13 +207,14 @@ function createParameterizedVariants(): Question[] {
     if (validateQuestion(q)) variants.push(q);
   });
 
-  // Group 4: Element-wise arithmetic & vectorization variants
+  // Group 4: Element-wise arithmetic & vectorization variants (Level 1+)
   const mathScales = [2, 3, 4, 5, 10];
   mathScales.forEach((multiplier) => {
-    const q: Question = {
+    const q: LevelGatedQuestion = {
       id: `v_vec_mult_${multiplier}`,
       topic: 'arrays',
       difficulty: 1,
+      minLevel: 1,
       type: 'predict_output',
       question: `What does np.array([2, 4, 6]) * ${multiplier} evaluate to?`,
       codeSnippet: `import numpy as np\narr = np.array([2, 4, 6]) * ${multiplier}\nprint(arr)`,
@@ -169,10 +232,11 @@ function createParameterizedVariants(): Question[] {
     if (validateQuestion(q)) variants.push(q);
 
     // Addition variant
-    const qAdd: Question = {
+    const qAdd: LevelGatedQuestion = {
       id: `v_vec_add_${multiplier}`,
       topic: 'arrays',
       difficulty: 1,
+      minLevel: 1,
       type: 'predict_output',
       question: `What does np.array([10, 20, 30]) + ${multiplier} evaluate to?`,
       codeSnippet: `import numpy as np\narr = np.array([10, 20, 30]) + ${multiplier}\nprint(arr)`,
@@ -190,7 +254,7 @@ function createParameterizedVariants(): Question[] {
     if (validateQuestion(qAdd)) variants.push(qAdd);
   });
 
-  // Group 5: Reshape variants
+  // Group 5: Reshape variants (Level 7+)
   const reshapePairs = [
     { orig: [2, 6], target: [3, 4], size: 12 },
     { orig: [3, 4], target: [2, 6], size: 12 },
@@ -202,10 +266,11 @@ function createParameterizedVariants(): Question[] {
   ];
 
   reshapePairs.forEach((rp, idx) => {
-    const q: Question = {
+    const q: LevelGatedQuestion = {
       id: `v_reshape_${rp.orig[0]}x${rp.orig[1]}_to_${rp.target[0]}x${rp.target[1]}`,
-      topic: 'reshaping',
+      topic: 'reshape',
       difficulty: 2,
+      minLevel: 7,
       type: 'shape_prediction',
       question: `If an array has shape (${rp.orig[0]}, ${rp.orig[1]}), which new shape is valid for arr.reshape()?`,
       options: [
@@ -222,7 +287,7 @@ function createParameterizedVariants(): Question[] {
     if (validateQuestion(q)) variants.push(q);
   });
 
-  // Group 6: Broadcasting compatibility variants
+  // Group 6: Broadcasting compatibility variants (Level 19+)
   const broadcastShapes = [
     { a: '(3, 1)', b: '(1, 4)', res: '(3, 4)' },
     { a: '(4, 1)', b: '(1, 5)', res: '(4, 5)' },
@@ -232,10 +297,11 @@ function createParameterizedVariants(): Question[] {
   ];
 
   broadcastShapes.forEach((bs, idx) => {
-    const q: Question = {
+    const q: LevelGatedQuestion = {
       id: `v_broadcast_${idx}`,
       topic: 'broadcasting',
       difficulty: 3,
+      minLevel: 19,
       type: 'shape_prediction',
       question: `What is the resulting shape when broadcasting array A of shape ${bs.a} with array B of shape ${bs.b}?`,
       options: [bs.res, '(1, 1)', `${bs.a}`, 'ValueError: operands could not be broadcast together'],
@@ -251,11 +317,14 @@ function createParameterizedVariants(): Question[] {
 }
 
 // Pre-generated verified variants pool
-const PARAMETERIZED_VARIANTS: Question[] = createParameterizedVariants();
+const PARAMETERIZED_VARIANTS: LevelGatedQuestion[] = createParameterizedVariants();
 
 /**
  * QuestionHistoryManager:
- * Tracks question history per level to strictly enforce ZERO REPETITION on retry.
+ * Tracks question history per level to strictly enforce:
+ * 1. STRICT PEDAGOGICAL ISOLATION: On first attempt, questions ONLY come from this level's curated lesson!
+ * 2. ZERO UNTAUGHT LEAKAGE: On retry, questions only come from this level or already-unlocked levels!
+ * 3. ZERO REPETITION on retry: Guarantees fresh questions are served.
  */
 export class QuestionHistoryManager {
   private static instance: QuestionHistoryManager | null = null;
@@ -286,9 +355,14 @@ export class QuestionHistoryManager {
   }
 
   /**
-   * Selects a fresh set of questions for a level attempt.
-   * Guarantees that no previously seen questions for this level are reused
-   * until the entire combined pool (bank + variants) is genuinely exhausted.
+   * Selects questions for a level attempt.
+   * On initial level play (isRetry === false):
+   * Strictly delivers the exact curated questions configured for this level!
+   * This guarantees that every question asked tests ONLY the concept Aria just taught.
+   *
+   * On retry (isRetry === true):
+   * Delivers fresh questions matching this level or previously mastered levels,
+   * never pulling untaught material from future levels.
    */
   public getFreshQuestionSet(config: LevelConfig, countNeeded: number, isRetry: boolean = false): Question[] {
     const levelId = config.id;
@@ -298,51 +372,80 @@ export class QuestionHistoryManager {
       this.usedQuestionIdsByLevel.set(levelId, usedIds);
     }
 
-    // 1. Gather all base questions matching level or topic
-    const baseQuestions: Question[] = [];
-    // Primary: questions explicitly configured for level
+    // 1. Level's own curated primary questions (explicitly designed for this lesson)
+    const primaryQuestions: Question[] = [];
     config.questionIds.forEach((id) => {
       const q = QUESTION_BANK[id];
       if (q && validateQuestion(q)) {
-        baseQuestions.push(q);
+        primaryQuestions.push(q);
       }
     });
 
-    // Secondary: all questions from QUESTION_BANK with matching topic
-    Object.values(QUESTION_BANK).forEach((q) => {
-      if (q.topic === config.topic && !baseQuestions.some((b) => b.id === q.id) && validateQuestion(q)) {
-        baseQuestions.push(q);
-      }
-    });
-
-    // Tertiary: add parameterized variants matching this topic
-    PARAMETERIZED_VARIANTS.forEach((vq) => {
-      if (vq.topic === config.topic && !baseQuestions.some((b) => b.id === vq.id)) {
-        baseQuestions.push(vq);
-      }
-    });
-
-    // 2. Filter out all previously used question IDs for this level
-    let freshCandidates = baseQuestions.filter((q) => !usedIds!.has(q.id));
-
-    // If pool is truly exhausted (player died 4+ times on same level), reset used set to allow clean recycling
-    if (freshCandidates.length < countNeeded) {
-      usedIds.clear();
-      freshCandidates = [...baseQuestions];
+    if (!isRetry) {
+      // First attempt on level: strictly serve the curated questions designed for this level!
+      // Keep educational order and mark them as used in history.
+      const selected = primaryQuestions.slice(0, Math.max(countNeeded, primaryQuestions.length));
+      selected.forEach((q) => usedIds!.add(q.id));
+      return selected.map(shuffleQuestion);
     }
 
-    // 3. Shuffle candidates randomly
-    const shuffled = [...freshCandidates].sort(() => Math.random() - 0.5);
+    // RETRY SESSION (player died in combat and needs ammo):
+    // Priority 1: Unused questions from this level's primary list
+    const unusedPrimary = primaryQuestions.filter((q) => !usedIds!.has(q.id));
+    const selected: Question[] = [...unusedPrimary];
 
-    // 4. Select the required count
-    const selected = shuffled.slice(0, Math.max(countNeeded, 5));
+    // Priority 2: Level-appropriate variants that only require concepts up to this level
+    if (selected.length < countNeeded) {
+      const eligibleVariants = PARAMETERIZED_VARIANTS.filter((vq) => {
+        const minLvl = vq.minLevel || 1;
+        return (
+          minLvl <= levelId &&
+          vq.topic === config.topic &&
+          !usedIds!.has(vq.id) &&
+          !selected.some((s) => s.id === vq.id)
+        );
+      });
 
-    // 5. Mark selected question IDs as used in history
-    selected.forEach((q) => {
-      usedIds!.add(q.id);
-    });
+      const shuffledVariants = eligibleVariants.sort(() => Math.random() - 0.5);
+      for (const vq of shuffledVariants) {
+        if (selected.length >= countNeeded) break;
+        selected.push(vq);
+      }
+    }
 
-    // 6. Return each question with randomized options ordering
-    return selected.map(shuffleQuestion);
+    // Priority 3: Review questions from previously mastered levels (strictly level < current)
+    if (selected.length < countNeeded && levelId > 1) {
+      const previousReviewQuestions: Question[] = [];
+      CURRICULUM_LEVELS.forEach((prevLvl) => {
+        if (prevLvl.id < levelId) {
+          prevLvl.questionIds.forEach((qid) => {
+            const q = QUESTION_BANK[qid];
+            if (q && validateQuestion(q) && !usedIds!.has(q.id) && !selected.some((s) => s.id === q.id)) {
+              previousReviewQuestions.push(q);
+            }
+          });
+        }
+      });
+
+      const shuffledReview = previousReviewQuestions.sort(() => Math.random() - 0.5);
+      for (const rq of shuffledReview) {
+        if (selected.length >= countNeeded) break;
+        selected.push(rq);
+      }
+    }
+
+    // Priority 4: If pool exhausted from multiple deaths, recycle primary questions cleanly
+    if (selected.length < countNeeded) {
+      usedIds.clear();
+      const recycled = [...primaryQuestions].sort(() => Math.random() - 0.5);
+      recycled.forEach((q) => {
+        if (selected.length < countNeeded && !selected.some((s) => s.id === q.id)) {
+          selected.push(q);
+        }
+      });
+    }
+
+    selected.forEach((q) => usedIds!.add(q.id));
+    return selected.slice(0, countNeeded).map(shuffleQuestion);
   }
 }
