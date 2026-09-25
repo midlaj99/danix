@@ -36,7 +36,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   const xpPercent = Math.min(100, Math.round((heroXp / Math.max(1, nextXp)) * 100));
 
   return (
-    <div className="relative w-full h-full min-h-screen flex items-center justify-center p-3 sm:p-6 bg-slate-950 overflow-y-auto select-none">
+    <div
+      className="relative w-full h-full max-h-[100dvh] flex items-center justify-center p-2.5 sm:p-6 bg-slate-950 overflow-y-auto select-none"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0.75rem))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0.75rem))',
+        paddingLeft: 'max(0.75rem, env(safe-area-inset-left, 0.75rem))',
+        paddingRight: 'max(0.75rem, env(safe-area-inset-right, 0.75rem))',
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
       {/* Deep Celestial Atmosphere Background */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-950/70 via-slate-950/95 to-black pointer-events-none z-0" />
 
@@ -86,16 +95,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       </div>
 
       {/* Main Menu Centerpiece Card */}
-      <div className="relative z-10 w-full max-w-md rpg-panel p-5 sm:p-7 text-center shadow-2xl flex flex-col items-center my-auto my-12">
+      <div className="relative z-10 w-full max-w-md rpg-panel p-4 sm:p-7 text-center shadow-2xl flex flex-col items-center my-auto py-4 sm:py-6">
         {/* Animated Runic Crest */}
-        <div className="relative w-20 h-20 mb-3 flex items-center justify-center">
+        <div className="relative w-16 h-16 sm:w-20 sm:h-20 mb-2 sm:mb-3 flex items-center justify-center">
           {/* Outer Rotating Dashed Ring */}
           <div className="absolute inset-0 rounded-full border-2 border-dashed border-amber-500/40 animate-spin-slow" />
           
           {/* Center Glowing Emblem */}
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 p-0.5 shadow-[0_0_35px_rgba(245,158,11,0.5)] animate-glow">
+          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 p-0.5 shadow-[0_0_35px_rgba(245,158,11,0.5)] animate-glow">
             <div className="w-full h-full bg-slate-950 rounded-2xl flex items-center justify-center">
-              <span className="font-rpg font-black text-3xl text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-400 to-yellow-500 tracking-wider">
+              <span className="font-rpg font-black text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-amber-400 to-yellow-500 tracking-wider">
                 Ω
               </span>
             </div>

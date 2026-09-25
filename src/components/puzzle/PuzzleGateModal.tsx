@@ -4,6 +4,7 @@ import { QUESTION_BANK } from '../../educational/questionBank';
 import { shuffleQuestion } from '../../educational/questionUtils';
 import { SoundManager } from '../../audio/SoundManager';
 import { Sparkles, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { AriaAvatar } from '../common/AriaAvatar';
 
 interface PuzzleGateModalProps {
   gate: PuzzleGate;
@@ -120,7 +121,7 @@ export const PuzzleGateModal: React.FC<PuzzleGateModalProps> = ({ gate, onSolved
         {/* Hint Display on wrong answer */}
         {showHint && (
           <div className="p-3 bg-pink-950/70 border border-pink-500/50 rounded-xl text-xs text-pink-200 flex items-start gap-2">
-            <img src="/aria.png" alt="Aria" className="w-6 h-6 rounded-full object-cover shrink-0" />
+            <AriaAvatar size="mini" />
             <div>
               <span className="font-bold text-pink-300">Aria's Whisper: </span>
               {question.hint}

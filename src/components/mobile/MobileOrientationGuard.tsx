@@ -18,6 +18,7 @@ export const MobileOrientationGuard: React.FC<MobileOrientationGuardProps> = ({ 
 
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [dismissedHint, setDismissedHint] = useState<boolean>(false);
 
   useEffect(() => {
     const handleViewportChange = () => {
@@ -45,12 +46,16 @@ export const MobileOrientationGuard: React.FC<MobileOrientationGuardProps> = ({ 
 
   // If already entered and landscape, render nothing or subtle rotate hint if in portrait
   if (hasEntered) {
-    if (isMobile && isPortrait) {
+    if (isMobile && isPortrait && !dismissedHint) {
       return (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-bounce">
-          <div className="bg-slate-950/90 border border-amber-400/80 text-amber-300 text-[10px] sm:text-xs font-mono px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
+        <div
+          onClick={() => setDismissedHint(true)}
+          className="fixed top-2 left-1/2 -translate-x-1/2 z-50 pointer-events-auto cursor-pointer animate-fadeIn"
+          title="Tap to dismiss"
+        >
+          <div className="bg-slate-950/95 border border-amber-400/80 text-amber-300 text-[10px] sm:text-xs font-mono px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md active:scale-95 transition-transform">
             <RotateCw className="w-3.5 h-3.5 animate-spin text-amber-400" style={{ animationDuration: '6s' }} />
-            <span>Landscape Recommended for Optimal Combat</span>
+            <span>Landscape Recommended • Tap to dismiss</span>
           </div>
         </div>
       );

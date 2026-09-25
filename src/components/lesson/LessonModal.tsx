@@ -3,6 +3,7 @@ import { LessonTheory, MiniPractice } from '../../types/curriculum';
 import { SoundManager } from '../../audio/SoundManager';
 import { shuffleMiniPractice } from '../../educational/questionUtils';
 import { BookOpen, Code, Terminal, CheckCircle2, XCircle, ArrowRight, Sparkles, Layers, Lightbulb, AlertTriangle } from 'lucide-react';
+import { AriaAvatar } from '../common/AriaAvatar';
 
 interface LessonModalProps {
   levelTitle: string;
@@ -78,27 +79,18 @@ export const LessonModal: React.FC<LessonModalProps> = ({
       <div className="relative w-full max-w-4xl h-full max-h-[96dvh] bg-slate-950/90 border border-amber-500/50 rounded-2xl p-3 sm:p-4 shadow-[0_0_50px_rgba(245,158,11,0.2)] flex flex-col justify-between overflow-hidden">
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-2 gap-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl overflow-hidden border border-pink-400/80 bg-slate-900 shrink-0">
-              <img
-                src="/aria.png"
-                alt="Aria"
-                className="w-full h-full object-cover object-top"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = './aria/aria.png';
-                }}
-              />
-            </div>
-            <div>
+          <div className="flex items-center gap-2 min-w-0">
+            <AriaAvatar size="header" />
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[8.5px] font-rpg font-bold px-1.5 py-0.2 rounded">
+                <span className="bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[8.5px] font-rpg font-bold px-1.5 py-0.2 rounded shrink-0">
                   ARIA'S LESSON
                 </span>
                 <span className="text-slate-400 text-[9px] uppercase tracking-wider truncate max-w-[120px] xs:max-w-none">
                   {topicTitle}
                 </span>
               </div>
-              <h2 className="text-xs sm:text-sm font-rpg font-bold text-white truncate max-w-[240px] xs:max-w-none">
+              <h2 className="text-xs sm:text-sm font-rpg font-bold text-white truncate max-w-[200px] xs:max-w-none">
                 {levelTitle}
               </h2>
             </div>
@@ -321,15 +313,15 @@ export const LessonModal: React.FC<LessonModalProps> = ({
         </div>
 
         {/* Footer Proceed Button */}
-        <div className="border-t border-slate-800/80 pt-2 mt-1 flex items-center justify-between shrink-0">
-          <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-mono">
+        <div className="border-t border-slate-800/80 pt-2 mt-1 flex flex-col xs:flex-row items-center justify-between gap-1.5 shrink-0">
+          <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-mono text-center xs:text-left">
             {activeTab === 'practice'
               ? 'Ready? Proceed to earn Radoxom ammunition!'
               : 'Review bullet points, then start questions.'}
           </span>
           <button
             onClick={handleProceed}
-            className="py-1.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-rpg font-black text-xs tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] active:scale-95 transition cursor-pointer"
+            className="w-full xs:w-auto py-1.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-rpg font-black text-xs tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] active:scale-95 transition cursor-pointer"
           >
             <span>START QUESTIONS →</span>
           </button>

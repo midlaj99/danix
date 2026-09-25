@@ -3,6 +3,8 @@ import { DialogueStep } from '../../types/curriculum';
 import { SoundManager } from '../../audio/SoundManager';
 import { ChevronRight, FastForward, Sparkles } from 'lucide-react';
 
+import { AriaAvatar } from '../common/AriaAvatar';
+
 interface AriaDialogueProps {
   dialogues: DialogueStep[];
   onComplete: () => void;
@@ -60,7 +62,8 @@ export const AriaDialogue: React.FC<AriaDialogueProps> = ({
     }
   };
 
-  const handleSkipAll = () => {
+  const handleSkipAll = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     SoundManager.getInstance().playUiClick();
     onComplete();
   };
@@ -75,23 +78,12 @@ export const AriaDialogue: React.FC<AriaDialogueProps> = ({
       }}
     >
       {/* Semi-transparent Sleek Dialogue Panel (Game World Visible Behind) */}
-      <div className="relative w-full max-w-4xl bg-slate-950/88 border border-pink-500/50 rounded-2xl p-3 sm:p-4 shadow-[0_0_40px_rgba(236,72,153,0.2)] backdrop-blur-md flex items-center gap-3 sm:gap-5">
-        {/* Aria High-Resolution Character Portrait */}
-        <div className="relative shrink-0 flex flex-col items-center">
-          <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-2xl overflow-hidden border-2 border-pink-400/90 shadow-[0_0_20px_rgba(236,72,153,0.35)] bg-slate-900 flex items-center justify-center">
-            <img
-              src="/aria.png"
-              alt="Aria"
-              className="w-full h-full object-cover object-top"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = './aria/aria.png';
-              }}
-            />
-          </div>
-          <div className="absolute -bottom-1.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-rpg font-bold text-[8.5px] px-2 py-0.2 rounded-full shadow-md flex items-center gap-0.5">
-            <Sparkles className="w-2.5 h-2.5" /> ARIA
-          </div>
-        </div>
+      <div
+        onClick={handleNext}
+        className="relative w-full max-w-4xl bg-slate-950/90 border border-pink-500/50 rounded-2xl p-2.5 sm:p-4 shadow-[0_0_40px_rgba(236,72,153,0.25)] backdrop-blur-md flex items-center gap-2.5 sm:gap-5 cursor-pointer active:scale-[0.99] transition-transform"
+      >
+        {/* Aria High-Resolution Character Portrait via AriaAvatar */}
+        <AriaAvatar size="dialogue" showBadge />
 
         {/* Dialogue Body */}
         <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
@@ -121,10 +113,16 @@ export const AriaDialogue: React.FC<AriaDialogueProps> = ({
           </div>
 
           {/* Footer Action Button */}
-          <div className="flex items-center justify-end mt-1 pt-1">
+          <div className="flex items-center justify-between mt-1 pt-1">
+            <span className="text-[9px] text-slate-500 font-mono hidden sm:inline">
+              Tap anywhere to advance
+            </span>
             <button
-              onClick={handleNext}
-              className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-rpg font-bold text-xs sm:text-sm px-5 py-1.5 rounded-xl shadow-md shadow-pink-500/25 flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNext();
+              }}
+              className="ml-auto bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-rpg font-bold text-xs sm:text-sm px-4 sm:px-5 py-1.5 rounded-xl shadow-md shadow-pink-500/25 flex items-center gap-1.5 active:scale-95 transition cursor-pointer"
             >
               {currentIndex < dialogues.length - 1 ? (
                 <>

@@ -3,6 +3,7 @@ import { Question, MonsterArchetype } from '../../types/curriculum';
 import { SoundManager } from '../../audio/SoundManager';
 import { shuffleArray } from '../../educational/questionUtils';
 import { Clock, ShieldAlert, Sparkles, CheckCircle, XCircle } from 'lucide-react';
+import { AriaAvatar } from '../common/AriaAvatar';
 
 interface CombatModalProps {
   monster: MonsterArchetype;
@@ -107,11 +108,7 @@ export const CombatModal: React.FC<CombatModalProps> = ({
       {/* Floating Hint or Status Banner Above Command Tray */}
       {activeHint && resultState === 'wrong' && (
         <div className="pointer-events-auto mb-2.5 max-w-3xl w-full p-2.5 sm:p-3 bg-pink-950/95 border-2 border-pink-500/80 rounded-xl text-pink-200 text-xs sm:text-sm flex items-start gap-2.5 shadow-2xl animate-shake">
-          <img
-            src="/aria.png"
-            alt="Aria"
-            className="w-8 h-8 rounded-full object-cover border-2 border-pink-400 shrink-0"
-          />
+          <AriaAvatar size="mini" />
           <div>
             <span className="font-rpg font-bold text-pink-300">Aria's Guidance: </span>
             <span>{activeHint}</span>

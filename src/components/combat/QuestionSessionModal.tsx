@@ -3,6 +3,7 @@ import { Question } from '../../types/curriculum';
 import { SoundManager } from '../../audio/SoundManager';
 import { RadoxomEconomyManager } from '../../game/systems/RadoxomEconomyManager';
 import { BookOpen, CheckCircle2, XCircle, Zap, ArrowRight, Clock, AlertTriangle, Sparkles } from 'lucide-react';
+import { AriaAvatar } from '../common/AriaAvatar';
 
 export type QuestionState =
   | 'QUESTION_READY'
@@ -280,19 +281,10 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
 
       {/* MAIN SCREEN BODY (GAME QUESTION OVERLAY) */}
       {!isSessionFinished ? (
-        <div className="flex-1 flex flex-col justify-between min-h-0 py-1">
+        <div className="flex-1 flex flex-col justify-between min-h-0 py-1 overflow-y-auto pr-0.5 space-y-2">
           {/* Question Text Panel with Aria Portrait */}
-          <div className="bg-slate-950/85 backdrop-blur-md border border-slate-800 rounded-2xl p-2.5 sm:p-3.5 shadow-lg flex items-start gap-2.5">
-            <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-xl overflow-hidden border border-pink-400/80 bg-slate-900 shrink-0">
-              <img
-                src="/aria.png"
-                alt="Aria"
-                className="w-full h-full object-cover object-top"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = './aria/aria.png';
-                }}
-              />
-            </div>
+          <div className="bg-slate-950/85 backdrop-blur-md border border-slate-800 rounded-2xl p-2.5 sm:p-3.5 shadow-lg flex items-start gap-2.5 shrink-0">
+            <AriaAvatar size="question" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <span className="text-[8.5px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-sky-950 text-sky-400 border border-sky-500/40">
@@ -311,15 +303,15 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
 
               {/* Monospace Code snippet block if applicable */}
               {currentQuestion.codeSnippet && (
-                <div className="mt-1 p-2 rounded-lg bg-black/60 border border-slate-800 font-mono text-[10px] sm:text-xs text-sky-300 overflow-x-auto leading-relaxed">
+                <div className="mt-1 p-2 rounded-lg bg-black/60 border border-slate-800 font-mono text-[10px] sm:text-xs text-sky-300 overflow-x-auto leading-relaxed max-h-[140px]">
                   <pre>{currentQuestion.codeSnippet}</pre>
                 </div>
               )}
             </div>
           </div>
 
-          {/* TWO-COLUMN LANDSCAPE ANSWER GRID (Large thumb-friendly touch targets) */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 my-auto pt-1">
+          {/* RESPONSIVE ANSWER GRID (Single column on narrow mobile, 2 columns on landscape/tablets) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 my-auto pt-1">
             {(displayOptions.length > 0 ? displayOptions : currentQuestion.options).map((option, idx) => {
               const isSelected = selectedOption === option;
               const isCorrect = option === currentQuestion.correctAnswer;
@@ -344,7 +336,7 @@ export const QuestionSessionModal: React.FC<QuestionSessionModalProps> = ({
                   key={idx}
                   onClick={(e) => handleSelectOption(option, e)}
                   disabled={isInputDisabled}
-                  className={`relative text-left p-2.5 sm:p-3 rounded-xl border transition-all duration-150 flex items-center gap-2 group cursor-pointer disabled:cursor-default min-h-[48px] active:scale-[0.98] ${btnStyle}`}
+                  className={`relative text-left p-2.5 sm:p-3 rounded-xl border transition-all duration-150 flex items-center gap-2 group cursor-pointer disabled:cursor-default min-h-[46px] active:scale-[0.98] ${btnStyle}`}
                 >
                   <div className="w-6 h-6 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center font-bold text-xs text-sky-400 shrink-0 group-hover:border-sky-400">
                     {String.fromCharCode(65 + idx)}
