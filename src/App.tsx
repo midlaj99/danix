@@ -409,11 +409,7 @@ export const App: React.FC = () => {
   };
 
   const handleStartCombatFromIntro = () => {
-    if (radoxomsEarned > 0) {
-      setCurrentScreen('COMBAT_PREP');
-    } else {
-      setCurrentScreen('QUESTION_SESSION');
-    }
+    handleCommenceCombat();
   };
 
   const handleAnswerCorrect = (combo: number = 1) => {
@@ -687,7 +683,7 @@ export const App: React.FC = () => {
           totalQuestions={levelQuestions.length}
           playerStats={gameState.playerStats}
           activeSkill={activeSkill}
-          onCommenceCombat={() => setCurrentScreen('MONSTER_INTRO')}
+          onCommenceCombat={handleCommenceCombat}
         />
       )}
 

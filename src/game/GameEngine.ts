@@ -73,7 +73,9 @@ export class GameEngine {
   // Real-time 1v1 Combat Fields
   public isRealTimeCombat: boolean = false;
   public isCombatEntrySequence: boolean = false;
+  public combatEntryPhase: 'RUN_IN' | 'ROAR_TALK' | 'ENGAGE' = 'ENGAGE';
   public combatEntryTimer: number = 0;
+  public monsterDialogueText: string = '';
   public radoxomProjectiles: RadoxomProjectile[] = [];
   public monsterProjectiles: MonsterProjectile[] = [];
   public radoxomsAvailable: number = 0;
@@ -292,7 +294,8 @@ export class GameEngine {
   public startRealtimeCombat(radoxomsEarned: number) {
     this.isRealTimeCombat = true;
     this.isCombatEntrySequence = true;
-    this.combatEntryTimer = 1.2;
+    this.combatEntryPhase = 'RUN_IN';
+    this.combatEntryTimer = 1.3;
     this.inEncounter = false;
     this.isCinematicIntro = false;
     this.radoxomsAvailable = radoxomsEarned;
@@ -304,6 +307,14 @@ export class GameEngine {
     this.ammoExhaustionTimer = 0;
     this.hero.resetUltimate();
     this.notifyUltimateState();
+
+    // Prepare challenging and humiliating dialogue
+    const introLines = this.levelConfig.monster.introDialogue;
+    if (introLines && introLines.length > 0) {
+      this.monsterDialogueText = introLines.join(' ');
+    } else {
+      this.monsterDialogueText = 'GRRR! You dare bring elementary scalar delusions before me?! Your dimensions will be crushed into zero bytes, worm!';
+    }
 
     this.combatStats = {
       radoxomsEarned,
@@ -325,8 +336,8 @@ export class GameEngine {
     this.hero.currentShield = stats.currentShield;
     this.hero.maxShield = stats.maxShield;
 
-    // Arena placement: Start with tactical spacing
-    this.hero.x = 750;
+    // Arena placement: Hero stands firm on the left
+    this.hero.x = 680;
     this.hero.y = this.groundY - this.hero.height;
     this.hero.vx = 0;
     this.hero.vy = 0;
@@ -334,9 +345,9 @@ export class GameEngine {
     this.hero.state = 'idle';
 
     if (this.monster) {
-      // Monster enters from distance, moving dynamically to establish combat distance
-      this.monster.x = 1150;
-      this.monster.vx = -180;
+      // Monster starts OUTSIDE the screen on the far right (x = 1520), charging in!
+      this.monster.x = 1520;
+      this.monster.vx = -340;
       this.monster.facingRight = false;
       this.monster.isEntering = false;
       this.monster.isDefeated = false;
@@ -887,13 +898,68 @@ export class GameEngine {
       this.combatStats.timeSurvived = Math.round(this.combatDurationTimer * 10) / 10;
       this.hero.x = Math.max(this.arenaMinX + 15, Math.min(this.arenaMaxX - 15, this.hero.x));
 
-      // Handle Combat Entry Positioning Sequence
-      if (this.isCombatEntrySequence) {
-        this.combatEntryTimer -= dt;
-        if (this.combatEntryTimer <= 0) {
-          this.isCombatEntrySequence = false;
-          this.particles.spawnDamageText(this.hero.x + 40, this.hero.y - 40, '⚔️ ENGAGE! ⚔️', true);
-          SoundManager.getInstance().playSwordClash();
+      // Handle Combat Entry Positioning Sequence (Monster charges in, roars, and talks)
+      if (this.isCombatEntrySequence && this.monster) {
+        if (this.combatEntryPhase === 'RUN_IN') {
+          this.combatEntryTimer -= dt;
+          this.monster.x += this.monster.vx * dt;
+
+          // Footstep ground sparks & camera rumble as monster charges in
+          if (Math.random() < 0.4) {
+            this.particles.spawnSparks(this.monster.x + 30, this.groundY, '#ef4444', 3);
+            this.triggerScreenShake(0.08, 4);
+          }
+
+          if (this.monster.x <= 1040 || this.combatEntryTimer <= 0) {
+            this.monster.x = Math.max(980, Math.min(1040, this.monster.x));
+            this.monster.vx = 0;
+            this.combatEntryPhase = 'ROAR_TALK';
+            this.combatEntryTimer = 4.2; // 4.2s to read, immediately skippable by tap / space
+
+            // Monster Roar & Boom on entrance!
+            SoundManager.getInstance().playMonsterRoar();
+            SoundManager.getInstance().playCinematicBoom();
+            this.triggerScreenShake(0.65, 18);
+
+            this.monster.state = 'attack';
+            this.particles.spawnSparks(this.monster.x + 30, this.monster.y + 20, '#f97316', 32);
+          }
+        } else if (this.combatEntryPhase === 'ROAR_TALK') {
+          this.combatEntryTimer -= dt;
+
+          // Continuous roaring actions, fiery sparks & body vibration
+          if (Math.random() < 0.35) {
+            this.particles.spawnSparks(
+              this.monster.x + 10 + Math.random() * 40,
+              this.monster.y + 10 + Math.random() * 40,
+              '#ef4444',
+              2
+            );
+          }
+          this.monster.y = this.groundY - this.monster.height + Math.sin(this.combatDurationTimer * 18) * 3;
+
+          // Player can skip dialogue to fight immediately by tapping or pressing attack/space/ult
+          if (
+            this.input.justClicked ||
+            this.input.justAttacked ||
+            this.input.justJumped ||
+            this.input.justUltimated ||
+            this.combatEntryTimer <= 0
+          ) {
+            this.combatEntryPhase = 'ENGAGE';
+            this.isCombatEntrySequence = false;
+            this.monster.y = this.groundY - this.monster.height;
+            this.monster.state = 'chase';
+            this.particles.spawnDamageText(
+              (this.hero.x + this.monster.x) / 2,
+              this.groundY - 140,
+              '⚔️ ENGAGE! ⚔️',
+              true,
+              '#ef4444'
+            );
+            SoundManager.getInstance().playSwordClash();
+            this.triggerScreenShake(0.35, 12);
+          }
         }
       }
 
@@ -903,8 +969,8 @@ export class GameEngine {
       const targetWorldY = this.mouseY;
       const heroAimAngle = Math.atan2(targetWorldY - heroCenterY, targetWorldX - this.hero.x);
 
-      // 2. Monster Real-time AI with dynamic prediction and hazard pressure
-      if (this.monster && !this.monster.isDefeated) {
+      // 2. Monster Real-time AI with dynamic prediction and hazard pressure (Unlocks after entry dialogue)
+      if (this.monster && !this.monster.isDefeated && !this.isCombatEntrySequence) {
         this.monster.updateRealtimeAI(
           dt,
           this.hero.x,
@@ -1269,6 +1335,9 @@ export class GameEngine {
     }
     if (this.monster) {
       this.monster.render(ctx);
+      if (this.isCombatEntrySequence && this.combatEntryPhase === 'ROAR_TALK') {
+        this.renderMonsterDialogueBubble(ctx);
+      }
     }
 
     // Layer 10.5: Projectiles (Radoxom energy & Monster attacks)
@@ -1352,6 +1421,84 @@ export class GameEngine {
     ctx.fill();
 
     ctx.restore();
+    ctx.restore();
+  }
+
+  private renderMonsterDialogueBubble(ctx: CanvasRenderingContext2D) {
+    if (!this.monster) return;
+
+    const headX = this.monster.x + this.monster.width / 2;
+    const headY = this.monster.y - 12;
+
+    const bubbleW = 340;
+    const bubbleH = 92;
+    const bubbleX = headX - bubbleW / 2;
+    const bubbleY = headY - bubbleH - 18;
+
+    ctx.save();
+
+    // 1. Bubble Shadow & Glow
+    ctx.shadowColor = 'rgba(239, 68, 68, 0.7)';
+    ctx.shadowBlur = 18;
+
+    // 2. Bubble Body Background (Dark Obsidian)
+    ctx.fillStyle = 'rgba(11, 15, 25, 0.96)';
+    ctx.beginPath();
+    ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 14);
+    ctx.fill();
+
+    // 3. Glowing Crimson Border
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // 4. Pointer Triangle pointing directly to Monster's Head
+    ctx.beginPath();
+    ctx.moveTo(headX - 12, bubbleY + bubbleH);
+    ctx.lineTo(headX + 12, bubbleY + bubbleH);
+    ctx.lineTo(headX, headY);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(11, 15, 25, 0.96)';
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0; // reset shadow
+
+    // 5. Header: Monster Name + Roaring Status
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#f87171';
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText(`👹 ${this.monster.config.name.toUpperCase()} (ROARING)`, bubbleX + 14, bubbleY + 20);
+
+    // 6. Dialogue Text (Wrapped into 2-3 lines)
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'italic 12px "Segoe UI", sans-serif';
+
+    const words = this.monsterDialogueText.split(' ');
+    let line = '';
+    let lineY = bubbleY + 40;
+    const maxLineW = bubbleW - 28;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxLineW && n > 0) {
+        ctx.fillText(line, bubbleX + 14, lineY);
+        line = words[n] + ' ';
+        lineY += 17;
+        if (lineY > bubbleY + 70) break;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, bubbleX + 14, lineY);
+
+    // 7. Footer Hint: Click / Tap / Space to Fight
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 9.5px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('⚔ TAP SCREEN OR PRESS [SPACE] TO FIGHT ❯', bubbleX + bubbleW - 14, bubbleY + bubbleH - 10);
+
     ctx.restore();
   }
 
