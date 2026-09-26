@@ -41,22 +41,21 @@ export const CURRICULUM_LEVELS: LevelConfig[] = [
     ],
     theory: {
       partA: {
-        title: 'What is NumPy & Why Does It Exist?',
-        concept: 'Contiguous C Arrays, ndarray & Homogeneity',
-        explanation:
-          'NumPy (Numerical Python) is the foundational scientific library in Python. Standard Python lists store pointers to individual heap objects, which incurs massive overhead. NumPy provides the ndarray (N-Dimensional Array, <class \'numpy.ndarray\'>), which stores strictly homogeneous primitive data in contiguous blocks of memory, executing calculations up to 50x faster via C-loops and CPU SIMD vectorization. Because arrays are homogeneous, passing mixed types (e.g. np.array([1, 2, "three"])) causes NumPy to automatically upcast all elements to a common compatible type (strings in this case: [\'1\' \'2\' \'three\']).',
-        whyUseIt:
-          'Standard Python loops are slow for scientific calculations. NumPy processes millions of numbers instantaneously without writing explicit for-loops.',
+        title: "What is NumPy & Why Does It Exist?",
+        concept: "Contiguous C memory blocks, ndarray type, and SIMD hardware acceleration",
+        simpleAnalogy: "Imagine organizing your workspace: standard Python lists are like loose items scattered across different drawers, so finding each one takes extra time. A NumPy array is like a precision-molded tool tray where identical items snap side-by-side into a single contiguous block. Because they are aligned in memory, your computer processor can operate on all of them in a single hardware cycle!",
+        explanation: "• NumPy's core object is numpy.ndarray (<class 'numpy.ndarray'>), created with np.array().\n• Python lists store memory pointers to scattered heap objects; NumPy stores raw contiguous C data in RAM.\n• NumPy math is vectorized: arr * 2 multiplies every number at native C speed without slow for-loops.\n• Arrays are strictly homogeneous: mixing numbers and strings (e.g. [1, 2, 'three']) causes NumPy to upcast everything to matching strings (['1' '2' 'three']).\n• Python lists repeat on multiplication ([1, 2] * 2 == [1, 2, 1, 2]); NumPy multiplies element-wise ([2 4]).",
+        whyUseIt: "Executes numerical math 10x to 50x faster than standard Python loops by leveraging CPU cache locality and SIMD hardware instructions.",
         useCases: [
-          'Machine Learning & Deep Learning (PyTorch, TensorFlow core foundation)',
-          'Data Science & Analytics (Pandas is built directly on NumPy ndarrays)',
-          'Computer Vision & Image Processing (OpenCV matrices are NumPy arrays)',
-          'High-frequency quantitative trading and physical scientific simulations',
+          "Machine learning models & neural network tensor operations",
+          "Computer vision & image processing matrices",
+          "Scientific simulations & high-frequency quantitative analytics",
+          "Audio signal processing & Fourier transformation",
         ],
       },
       partB: {
-        title: 'The Universal Convention: import numpy as np',
-        concept: 'Module alias, ndarray type & mixed types upcasting',
+        title: "Importing NumPy and ndarray Basics",
+        concept: "Aliasing module as np, inspecting types, and element-wise arithmetic",
         code: `import numpy as np
 
 # Standard Python list multiplication duplicates the sequence
@@ -75,8 +74,7 @@ print("Mixed array:", mixed_arr)`,
 NumPy array * 2: [2 4 6]
 Array Type: <class 'numpy.ndarray'>
 Mixed array: ['1' '2' 'three']`,
-        breakdown:
-          '1. `import numpy as np` is the universal convention.\n2. `type(np_arr)` reveals `<class \'numpy.ndarray\'>`.\n3. `np_arr * 2` multiplies each individual number in-place at native C speed!\n4. Mixed types like `[1, 2, "three"]` are upcast to homogeneous strings `[\'1\' \'2\' \'three\']`.',
+        breakdown: "• 'import numpy as np' is the universally adopted standard convention.\n• 'type(np_arr)' confirms the core class is <class 'numpy.ndarray'>.\n• 'np_arr * 2' multiplies each element in-place via vectorization, turning [1, 2, 3] into [2, 4, 6].\n• Mixed types like [1, 2, 'three'] automatically upcast to strings: ['1' '2' 'three'].",
         visualArray: [['1', '2', '3']],
       },
     },
@@ -165,22 +163,20 @@ Mixed array: ['1' '2' 'three']`,
     ],
     theory: {
       partA: {
-        title: 'Building Multi-Dimensional Structures',
-        concept: '1D vectors, 2D grids, and 3D tensors',
-        explanation:
-          'A 1D array represents a single line or list of numbers (shape `(N,)`). A 2D array represents a matrix of rows and columns (shape `(rows, cols)`). A 3D array is a stack of 2D matrices (shape `(blocks, rows, cols)`). In Python, `len(arr)` always returns the size of the first dimension (the number of rows). Furthermore, NumPy arrays must be rectangular: passing ragged sublists with uneven lengths like `[[1, 2], [3, 4, 5]]` raises `ValueError: setting an array element with a sequence` in modern NumPy unless `dtype=object` is specified.',
-        whyUseIt:
-          'Real data is multi-dimensional: tabular records, geospatial grids, audio spectrograms, and image pixels.',
+        title: "Building Multi-Dimensional Structures",
+        concept: "1D vectors, 2D matrices, and 3D tensors from nested lists",
+        simpleAnalogy: "Think of dimensions like geometry in the physical world: a 1D array is a straight ruler (length), a 2D array is a spreadsheet or sheet of paper (rows and columns), and a 3D array is a stack of papers forming a book (depth, rows, and columns).",
+        explanation: "• 1D vector: Shape (N,), ndim=1, representing a single line of numbers.\n• 2D matrix: Shape (rows, cols), ndim=2, created from nested lists like [[1, 2], [3, 4]].\n• 3D tensor: Shape (blocks, rows, cols), ndim=3, created from 3 levels of nested brackets.\n• len(arr) on a 2D array always returns the outer dimension size (the number of rows).\n• Modern NumPy requires all sub-lists to have equal lengths; passing ragged/uneven rows raises a ValueError.",
+        whyUseIt: "Structures multi-dimensional data like tabular tables, color image pixel matrices, and video volumes into predictable grids.",
         useCases: [
-          'Tabular feature data: 2D array with shape (samples, features)',
-          'Grayscale image: 2D array with shape (height, width)',
-          'Color image: 3D array with shape (height, width, 3 channels) or 3D tensor (blocks, rows, cols)',
-          'Video stream: 4D array (frames, height, width, channels)',
+          "Tabular datasets: 2D array with shape (samples, features)",
+          "Digital images: 2D grayscale (height, width) or 3D color (height, width, channels)",
+          "Video streaming: 4D tensor (frames, height, width, channels)",
         ],
       },
       partB: {
-        title: 'Creating 1D, 2D, and 3D Arrays',
-        concept: 'np.array() with nested lists and shapes',
+        title: "Constructing 1D, 2D, and 3D Arrays",
+        concept: "Building multi-axis arrays and inspecting shapes and ndim",
         code: `import numpy as np
 
 # 1D Vector (shape: (3,), ndim: 1)
@@ -199,8 +195,7 @@ t = np.array([
 print("3D shape:", t.shape, "| ndim:", t.ndim)`,
         output: `2D shape: (4, 3) | ndim: 2 | len(m): 4
 3D shape: (3, 2, 2) | ndim: 3`,
-        breakdown:
-          '- Number of dimensions `ndim`: 1D is ndim=1, 2D matrix is ndim=2, 3D tensor is ndim=3.\n- `m.shape` is `(4, 3)`. `len(m)` returns 4 (the outer row count).\n- 3D shape tuple format is `(blocks, rows, cols)` -> `(3, 2, 2)`.\n- Irregular ragged lists without `dtype=object` raise `ValueError: setting an array element with a sequence`.',
+        breakdown: "• 'v = np.array([10, 20, 30])' creates a 1D vector (shape: (3,), ndim: 1).\n• 'm = np.array(...)' creates a 2D matrix (shape: (4, 3), ndim: 2). Here, len(m) returns 4 (rows).\n• 't = np.array(...)' creates a 3D tensor (shape: (3, 2, 2), ndim: 3).\n• Passing uneven lists like [[1, 2], [3]] raises 'ValueError: setting an array element with a sequence'.",
         visualArray: [
           ['1', '2', '3'],
           ['4', '5', '6'],
@@ -276,21 +271,20 @@ print("3D shape:", t.shape, "| ndim:", t.ndim)`,
     ],
     theory: {
       partA: {
-        title: 'Inspecting Array Geometry & Memory',
-        concept: 'Core inspection attributes',
-        explanation:
-          'NumPy arrays carry metadata attributes: `arr.ndim` (number of axes), `arr.shape` (tuple containing length of each dimension), `arr.size` (total number of elements), `arr.itemsize` (bytes per individual element), and `arr.nbytes` (total bytes in RAM).',
-        whyUseIt:
-          'Understanding shapes and sizes is essential before training machine learning models or verifying matrix operations.',
+        title: "Inspecting Array Geometry & Memory",
+        concept: "Array metadata: ndim, shape, size, itemsize, and nbytes",
+        simpleAnalogy: "Every package has a shipping label that describes its contents: its dimensions (ndim), row and column counts (shape), total item count (size), weight of each item (itemsize), and total package weight (nbytes). Array attributes are that exact label!",
+        explanation: "• arr.ndim: The number of axes/dimensions (1 for vector, 2 for matrix, 3 for tensor).\n• arr.shape: A tuple with the size along each axis (e.g. (2, 3) means 2 rows and 3 columns).\n• arr.size: Total number of elements across all dimensions (e.g. 2 * 3 = 6 elements).\n• arr.itemsize: Memory consumed by a single element in bytes (float64 = 8 bytes, int32 = 4 bytes).\n• arr.nbytes: Total memory consumed by the entire array: nbytes = size * itemsize (e.g. 10 elements * 4 bytes = 40 bytes).",
+        whyUseIt: "Guarantees array dimensions match before matrix operations and prevents memory overflow when handling large datasets.",
         useCases: [
-          'Checking tensor compatibility before neural network layers',
-          'Debugging image channel layout (H, W, C) vs (C, H, W)',
-          'Estimating RAM usage for massive scientific datasets',
+          "Validating neural network layer input/output tensor shapes",
+          "Calculating RAM consumption before loading big data tables",
+          "Confirming image width, height, and color channels",
         ],
       },
       partB: {
-        title: 'Inspecting Array Attributes in Action',
-        concept: 'Shape and memory calculations',
+        title: "Inspecting Geometry and Memory Footprint",
+        concept: "Reading ndim, shape, size, itemsize, and calculating total nbytes",
         code: `import numpy as np
 
 matrix = np.array([[10, 20, 30], [40, 50, 60]], dtype=np.int32)
@@ -305,8 +299,7 @@ Shape (rows, cols): (2, 3)
 Total elements (size): 6
 Bytes per item: 4
 Total memory (nbytes): 24`,
-        breakdown:
-          '- `matrix.shape`: (2, 3) = 2 rows, 3 columns.\n- `matrix.size`: 2 * 3 = 6 elements.\n- `matrix.itemsize`: int32 is 4 bytes.\n- `matrix.nbytes`: 6 elements * 4 bytes = 24 bytes total.',
+        breakdown: "• 'matrix.shape' returns (2, 3) = 2 rows by 3 columns.\n• 'matrix.size' is 6 (2 rows * 3 columns = 6 numbers total).\n• 'matrix.itemsize' is 4 bytes for int32 (or 8 bytes for float64).\n• 'matrix.nbytes' is 24 bytes (6 elements * 4 bytes = 24 bytes total memory).",
         visualArray: [
           ['10', '20', '30'],
           ['40', '50', '60'],
@@ -387,21 +380,20 @@ Total memory (nbytes): 24`,
     ],
     theory: {
       partA: {
-        title: 'Homogeneous Memory Architecture',
-        concept: 'Precision control and memory economy',
-        explanation:
-          'Unlike Python lists which can mix strings, floats, and objects, NumPy arrays enforce a single data type across all elements: int8, int32, int64, float32, float64, uint8, or bool. This strict homogeneity enables zero-pointer overhead and lightning CPU memory caching.',
-        whyUseIt:
-          'Using the right dtype (such as uint8 for images or float32 for AI weights) saves gigabytes of RAM and boosts processing speed.',
+        title: "Homogeneous Memory Architecture",
+        concept: "Precision types: int32, int64, float64, uint8, bool, and astype() conversion",
+        simpleAnalogy: "Think of containers designed for specific cargo: a coin counter only holds whole integers, while a laboratory graduated cylinder holds precise decimal water droplets. Using the right container prevents memory waste and ensures mathematical accuracy.",
+        explanation: "• Standard integer lists default to int64 (or int32 on 32-bit OS); float arrays default to float64.\n• np.uint8 stores unsigned 8-bit integers from 0 to 255 (the universal standard for RGB image pixels).\n• arr.astype(new_dtype) creates and returns a NEW converted copy; it NEVER mutates the original in-place.\n• Converting float to int via astype(int) truncates decimals toward zero (1.9 becomes 1).\n• astype(bool) converts 0 to False and any non-zero number (e.g. 1, 5, -2) to True.",
+        whyUseIt: "Optimizes memory consumption (uint8 uses 8x less RAM than int64) and enables GPU hardware acceleration.",
         useCases: [
-          'Computer Vision: uint8 (0 to 255 per pixel channel)',
-          'Deep Learning inference: float16 or float32 for GPU tensor cores',
-          'Boolean masks: bool_ (1 byte per boolean flag)',
+          "Digital computer vision: uint8 (0 to 255 per RGB color channel)",
+          "Deep learning training: float32 and float16 for GPU tensor cores",
+          "Boolean masks: bool (1 byte per True/False decision)",
         ],
       },
       partB: {
-        title: 'Inspecting and Converting Types with astype()',
-        concept: 'Type casting without in-place mutation',
+        title: "Data Types and astype() Type Casting",
+        concept: "Converting floats, integers, and booleans with astype()",
         code: `import numpy as np
 
 # Float array with decimals
@@ -415,8 +407,7 @@ print("Original untouched:", arr)`,
         output: `Original dtype: float64
 Converted to int: [1 2 3]
 Original untouched: [1.9 2.1 3.8]`,
-        breakdown:
-          '- `arr.dtype` inspects the element type.\n- `astype(new_type)` creates a new array converted to the requested type.\n- Converting float to int truncates toward zero (1.9 becomes 1).',
+        breakdown: "• 'arr = np.array([1.9, 2.1, 3.8])' starts as float64.\n• 'arr.astype(int)' truncates decimals, returning a new array [1, 2, 3].\n• The original array 'arr' remains completely untouched.\n• 'np.array([0, 1, 5, 0]).astype(bool)' evaluates to [False, True, True, False].",
       },
     },
     miniPractice: {
@@ -492,21 +483,20 @@ Original untouched: [1.9 2.1 3.8]`,
     ],
     theory: {
       partA: {
-        title: 'Coordinate Navigation in Arrays',
-        concept: '0-based indexing, 3D coordinates & IndexError bounds',
-        explanation:
-          'NumPy uses 0-based indexing. In multi-dimensional arrays, you access elements directly using comma syntax: `arr[row, col]` for 2D, and `arr[block, row, col]` for 3D tensors of shape `(blocks, rows, cols)` (avoiding slower chained Python syntax `arr[row][col]`). Negative indices count backward from the end (`arr[-1]` is the last element). Accessing an index outside array bounds or shape dimensions raises an `IndexError`.',
-        whyUseIt:
-          'Comma indexing is faster and allows advanced multi-axis selection in a single operation.',
+        title: "Coordinate Navigation in Arrays",
+        concept: "Zero-based indexing, negative indices, multi-axis [row, col], and bounds safety",
+        simpleAnalogy: "Imagine an apartment building with floor numbers and apartment numbers. In programming, the ground floor is always Floor 0. Asking for Floor -1 takes you straight to the top penthouse at the back of the building!",
+        explanation: "• NumPy indexing is 0-based: index 0 is the first element, index 1 is the second.\n• Negative indices count backward from the end: arr[-1] is the last item, arr[-2] is second-to-last.\n• In 2D arrays, access coordinates via comma syntax: arr[row, col] (e.g. matrix[1, 2]).\n• In 3D arrays, use arr[block, row, col].\n• Accessing an index outside array bounds raises an IndexError (e.g. index 5 on a 4-element array).\n• Assigning to an index (arr[0, 0] = 99) mutates the element in-place.",
+        whyUseIt: "Allows instantaneous coordinate-based reading and updating of specific values in multi-dimensional space.",
         useCases: [
-          'Locating pixel values at coordinate (y, x) in an image',
-          'Extracting specific sensor values at index -1 (most recent reading)',
-          'Accessing a voxel in a 3D medical MRI volume: `arr[slice, y, x]`',
+          "Locating player coordinates (x, y) on a game map",
+          "Reading the latest sensor data reading at index -1",
+          "Modifying an individual pixel color in an image buffer",
         ],
       },
       partB: {
-        title: 'Multi-Axis Indexing Syntax',
-        concept: 'arr[row, col] and 3D indexing arr[block, row, col]',
+        title: "Accessing Coordinates with Multi-Axis Indexing",
+        concept: "Zero-based row/col coordinates, negative indexing, and mutation",
         code: `import numpy as np
 
 matrix = np.array([
@@ -531,8 +521,7 @@ Row 1, Last Col: 60
 Mutated matrix:
  [[99 20 30]
  [40 50 60]]`,
-        breakdown:
-          '- `matrix[0, 2]` picks row 0, column 2 (value 30).\n- `matrix[1, -1]` picks row 1, last column (value 60).\n- In a 3D array of shape (2, 3, 4), `arr[0, 1, 2]` extracts block 0, row 1, col 2.\n- Attempting to access indices outside array bounds (exceeding dimension size) raises an IndexError.',
+        breakdown: "• 'matrix[0, 2]' accesses row 0, column 2 (value 30).\n• 'matrix[1, -1]' accesses row 1, last column (value 60).\n• 'tensor[0, 1, 2]' accesses block 0, row 1, column 2 in a 3D array.\n• 'matrix[0, 0] = 99' updates the element in-place; accessing out-of-bounds raises IndexError.",
       },
     },
     miniPractice: {
@@ -613,21 +602,20 @@ Mutated matrix:
     ],
     theory: {
       partA: {
-        title: 'Slicing Sub-Arrays Without Copying',
-        concept: 'start:stop:step and 2D slicing',
-        explanation:
-          'Slicing extracts contiguous sections of arrays: `arr[start:stop:step]`. In 2D, slice rows and columns simultaneously: `arr[row_slice, col_slice]`. A colon alone `:` means select all elements along that axis. In NumPy, basic slicing creates a view, avoiding memory copies.',
-        whyUseIt:
-          'Crucial for cropping images, splitting training/test datasets, and extracting feature columns.',
+        title: "Slicing Sub-Arrays Without Copying",
+        concept: "Slicing syntax: [start : stop : step], negative steps, and 2D submatrices",
+        simpleAnalogy: "Slicing is like using an adjustable window or stencil to view only a portion of a long timeline or photograph. You set where the stencil opens, where it closes, and how many frames to skip between steps.",
+        explanation: "• arr[start : stop] extracts elements from start up to (but excluding) stop.\n• The 'stop' boundary is non-inclusive (half-open interval [start, stop)).\n• 'step' determines the stride interval: arr[::2] selects every second element.\n• A negative step arr[::-1] reverses the array order.\n• In 2D matrices, slice both axes with commas: matrix[row_start:row_stop, col_start:col_stop].\n• arr[:, 1] extracts all rows along column 1 as a 1D vector.",
+        whyUseIt: "Extracts sub-regions, time windows, and image crops instantaneously with zero computational overhead.",
         useCases: [
-          'Extracting a column feature: `matrix[:, 0]`',
-          'Cropping a region of interest in an image: `image[100:300, 150:400]`',
-          'Reversing an array: `arr[::-1]`',
+          "Cropping a bounding box region of interest in an image",
+          "Subsampling a signal by taking every 2nd or 4th audio sample",
+          "Reversing chronological time series data",
         ],
       },
       partB: {
-        title: '2D Slicing Examples',
-        concept: 'Row and column slice combinations',
+        title: "1D and 2D Slicing Mechanics",
+        concept: "Extracting subarrays, whole columns, and reversing with strides",
         code: `import numpy as np
 
 matrix = np.array([
@@ -647,8 +635,7 @@ Reversed rows:
  [[ 9 10 11 12]
  [ 5  6  7  8]
  [ 1  2  3  4]]`,
-        breakdown:
-          '- `matrix[:, 1]` selects column 1.\n- `matrix[0:2, 1:3]` extracts a 2x2 sub-block.\n- `matrix[::-1, :]` reverses the order of rows.',
+        breakdown: "• 'arr[1:4]' selects indices 1, 2, and 3 (stops before 4).\n• 'arr[::2]' takes strides of 2, extracting every second element: [0, 2, 4].\n• 'arr[::-1]' steps backward by -1, completely reversing the array.\n• 'matrix[0:2, 1:3]' extracts a 2x2 submatrix from rows 0-1 and columns 1-2.",
       },
     },
     miniPractice: {
@@ -721,20 +708,20 @@ Reversed rows:
     ],
     theory: {
       partA: {
-        title: 'Dimension Transformation Without Duplication',
-        concept: 'Preserving total element size during reshape',
-        explanation:
-          'An array with 12 elements can be reshaped into (3, 4), (4, 3), (2, 6), (6, 2), (1, 12), or (2, 2, 3). Passing `-1` tells NumPy to automatically calculate that dimension. `flatten()` returns a deep copy, while `ravel()` returns a view.',
-        whyUseIt:
-          'Essential before feeding tabular data into neural networks or converting flat data streams into 2D matrices.',
+        title: "Dimension Transformation Without Duplication",
+        concept: "Array reshaping: reshape(), -1 automatic inference, flatten() vs ravel()",
+        simpleAnalogy: "Imagine having 12 ceramic tiles. You can lay them out as 1 row of 12, 2 rows of 6, 3 rows of 4, or 4 rows of 3. The tiles don't change and none are lost — only their arrangement in space changes!",
+        explanation: "• arr.reshape(new_shape) changes dimensions without altering the underlying data.\n• Total element count must stay identical: an array with 12 elements can become (3, 4) or (2, 6), but not (5, 2).\n• Passing -1 allows NumPy to automatically infer that dimension (e.g. arr.reshape(-1, 2) on 10 elements gives (5, 2)).\n• arr.flatten() ALWAYS allocates and returns an independent COPY in 1D.\n• arr.ravel() returns a fast 1D VIEW whenever memory is contiguous (copy only when necessary).",
+        whyUseIt: "Reshapes raw feature vectors into matrices or tensors required by machine learning frameworks and graphics engines.",
         useCases: [
-          'Flattening a 28x28 image to a 784-element vector',
-          'Unrolling weights and gradients in deep learning',
+          "Reshaping a 784-element pixel vector into a 28x28 image matrix for neural nets",
+          "Flattening multidimensional sensor grids before classification",
+          "Batching data into 3D tensors for recurrent neural networks",
         ],
       },
       partB: {
-        title: 'Using reshape() with the -1 Dimension',
-        concept: 'Automatic dimension inference',
+        title: "Reshaping Dimensions and Unrolling to 1D",
+        concept: "Using reshape, -1 dimension inference, flatten(), and ravel()",
         code: `import numpy as np
 
 flat = np.arange(1, 7) # [1, 2, 3, 4, 5, 6]
@@ -748,8 +735,7 @@ print("Auto rows shape:", auto_matrix.shape)`,
  [[1 2 3]
  [4 5 6]]
 Auto rows shape: (3, 2)`,
-        breakdown:
-          '- Total size is 6. `reshape(2, 3)` creates 2 rows of 3 columns.\n- `reshape(-1, 2)` automatically deduces 3 rows.',
+        breakdown: "• 'arr.reshape(2, 3)' morphs 6 elements into a 2x3 matrix.\n• 'arr.reshape(-1, 2)' automatically infers 5 rows for a 10-element array: shape (5, 2).\n• Attempting an invalid shape like reshape(5, 2) on 12 elements raises a ValueError.\n• 'flatten()' always allocates a new copy; 'ravel()' returns a zero-copy view when possible.",
       },
     },
     miniPractice: {
@@ -816,21 +802,20 @@ Auto rows shape: (3, 2)`,
     ],
     theory: {
       partA: {
-        title: 'Pre-Allocating Arrays',
-        concept: 'Instant array creation routines',
-        explanation:
-          'Rather than building arrays manually, NumPy provides optimized allocation routines: `np.zeros(shape)` creates arrays filled with 0.0, `np.ones(shape)` fills with 1.0, `np.full(shape, value)` fills with a constant, and `np.eye(N)` builds an N x N identity matrix with 1s on the diagonal.',
-        whyUseIt:
-          'Pre-allocating memory prevents dynamic resizing overhead and memory fragmentation in performance loops.',
+        title: "Pre-Allocating Arrays",
+        concept: "Array constructors: np.zeros, np.ones, np.full, and np.eye",
+        simpleAnalogy: "Before an artist paints a masterpiece or an accountant balances a ledger, they start with a clean canvas: a blank white page (zeros), an initialized grid of ones, or an identity benchmark. NumPy provides instant factory constructors for these clean slates.",
+        explanation: "• np.zeros(shape): Creates an array filled with 0.0 floats (or custom dtype).\n• np.ones(shape, dtype=int): Creates an array filled with 1s of specified type.\n• np.full(shape, value): Fills every element with the specified scalar value (e.g. np.full((2, 2), 7)).\n• np.eye(N): Creates an N x N 2D identity matrix with 1.0 along the main diagonal and 0.0 elsewhere.\n• np.eye(rows, cols): Also creates rectangular matrices with a diagonal of 1s (e.g. shape (3, 4)).",
+        whyUseIt: "Pre-allocates memory buffers and initializes weights and identity transformation matrices without manual loops.",
         useCases: [
-          'Initializing weight tensors in neural networks',
-          'Creating image mask canvases filled with zeros',
-          'Setting up coordinate identity transformation matrices',
+          "Initializing accumulator arrays and neural net weight matrices",
+          "Creating identity matrices for coordinate transformations in 3D graphics",
+          "Pre-allocating video display buffers to prevent memory reallocations",
         ],
       },
       partB: {
-        title: 'Special Creation Functions in Action',
-        concept: 'zeros, ones, full, and eye syntax',
+        title: "Pre-Allocating Arrays with Factory Functions",
+        concept: "Instantiating zeros, ones, constant arrays, and identity matrices",
         code: `import numpy as np
 
 z = np.zeros((2, 3))       # 2x3 zeros (float64)
@@ -847,8 +832,7 @@ Identity Matrix:
  [[1. 0. 0.]
  [0. 1. 0.]
  [0. 0. 1.]]`,
-        breakdown:
-          '- `np.zeros` and `np.ones` default to float64 unless `dtype` is given.\n- `np.eye(N)` creates a square diagonal identity matrix.',
+        breakdown: "• 'np.zeros((2, 3))' creates a 2-row, 3-column array filled with 0.0 floats.\n• 'np.ones(3, dtype=int)' creates [1, 1, 1] as integers.\n• 'np.full((2, 2), 7)' creates a 2x2 matrix filled completely with 7s.\n• 'np.eye(3)' creates a 3x3 identity matrix with 1.0 along the main diagonal.",
       },
     },
     miniPractice: {
@@ -924,20 +908,20 @@ Identity Matrix:
     ],
     theory: {
       partA: {
-        title: 'Step-Based vs Sample-Based Sequences',
-        concept: 'arange vs linspace',
-        explanation:
-          '`np.arange(start, stop, step)` generates numbers by taking fixed steps; the stop value is excluded. `np.linspace(start, stop, num)` generates a specified number of samples evenly distributed across the interval; the stop value is INCLUDED by default.',
-        whyUseIt:
-          'Floating-point steps in arange can suffer from floating-point accumulation errors. linspace guarantees exact sample counts for mathematical plots and simulations.',
+        title: "Step-Based vs Sample-Based Sequences",
+        concept: "Sequence generation: np.arange() step intervals vs np.linspace() sample counts",
+        simpleAnalogy: "If you are walking down a path, you can either say 'take steps of exactly 2 meters until I reach the gate' (arange), or 'divide the total distance to the gate into exactly 5 equal stops' (linspace).",
+        explanation: "• np.arange(start, stop, step): Generates values in increments of step, stopping BEFORE stop (half-open [start, stop)).\n• np.arange(5, 0, -1) uses a negative step to count backward: [5, 4, 3, 2, 1].\n• np.linspace(start, stop, num): Divides the interval into num evenly spaced points and INCLUDES the stop value.\n• Choose linspace over arange when working with floating-point intervals to avoid floating-point step accumulation errors.",
+        whyUseIt: "Generates numerical axes, time domains, and sample coordinates for plotting and mathematical evaluation.",
         useCases: [
-          'Plotting mathematical sine curves: `x = np.linspace(0, 2*np.pi, 100)`',
-          'Integer loops and indices: `np.arange(0, 50, 5)`',
+          "Generating time step arrays: t = np.linspace(0, 10, 1000) for audio and physics",
+          "Loop counters and integer index ranges using arange",
+          "Plotting smooth mathematical curves with matplotlib",
         ],
       },
       partB: {
-        title: 'Comparing arange and linspace',
-        concept: 'Syntax and output differences',
+        title: "Comparing np.arange() and np.linspace()",
+        concept: "Step size iteration vs evenly spaced sample interpolation",
         code: `import numpy as np
 
 # arange: specifies step size (stop is excluded!)
@@ -949,8 +933,7 @@ l = np.linspace(0, 1, 5)
 print("linspace(0, 1, 5):", l)`,
         output: `arange(0, 10, 2): [0 2 4 6 8]
 linspace(0, 1, 5): [0.   0.25 0.5  0.75 1.  ]`,
-        breakdown:
-          '- `arange(0, 10, 2)` stops before 10.\n- `linspace(0, 1, 5)` divides [0, 1] into 4 equal segments, producing 5 points.',
+        breakdown: "• 'np.arange(1, 5)' produces [1, 2, 3, 4] (stops before 5).\n• 'np.arange(5, 0, -1)' counts backward: [5, 4, 3, 2, 1].\n• 'np.linspace(0, 1, 5)' produces [0.0, 0.25, 0.5, 0.75, 1.0] (includes 1.0).\n• 'np.linspace(0, 10, 5)' has 10.0 as its exact final element.",
       },
     },
     miniPractice: {
@@ -1027,20 +1010,20 @@ linspace(0, 1, 5): [0.   0.25 0.5  0.75 1.  ]`,
     ],
     theory: {
       partA: {
-        title: 'Element-Wise Numerical Processing',
-        concept: 'Parallel vector arithmetic',
-        explanation:
-          'When two arrays of matching shape undergo arithmetic, operations happen element-by-element in parallel. `a + b` adds `a[i]` and `b[i]`. `a ** 2` squares every element. Division `/` always returns float values.',
-        whyUseIt:
-          'Replaces cumbersome nested loops with clean, readable, hardware-accelerated code.',
+        title: "Element-Wise Numerical Processing",
+        concept: "Vectorized arithmetic: +, -, *, /, //, %, and **",
+        simpleAnalogy: "Imagine two synchronized spreadsheet columns. When you hit Calculate, row 1 pairs with row 1, row 2 pairs with row 2, and all operations occur simultaneously across the board without manual formulas.",
+        explanation: "• All basic arithmetic operators in NumPy operate element-wise: elements at matching indices are paired.\n• Standard operators: + (addition), - (subtraction), * (multiplication), / (true division).\n• Powers: ** raises each element to a power (e.g. arr ** 2 squares each number).\n• Modulo & Floor: % computes remainder after division; // performs integer floor division.\n• Both arrays must have matching shapes or be compatible for broadcasting.",
+        whyUseIt: "Applies mathematical transformations across millions of records in parallel in a single line of expressive code.",
         useCases: [
-          'Calculating Euclidean distances',
-          'Applying discount percentages across inventory prices',
+          "Calculating physics velocity and acceleration across all particles simultaneously",
+          "Applying price discounts and tax adjustments to inventory arrays",
+          "Batch coordinate translations in computer game physics",
         ],
       },
       partB: {
-        title: 'Vector Arithmetic in Action',
-        concept: 'Element-wise operators',
+        title: "Element-Wise Arithmetic Operations",
+        concept: "Vectorized addition, subtraction, powers, modulo, and floor division",
         code: `import numpy as np
 
 a = np.array([10, 20, 30])
@@ -1054,8 +1037,7 @@ print("Modulo (a % 4):", a % 4)`,
 Multiplication: [10 40 90]
 Exponentiation (a ** 2): [1 4 9]
 Modulo (a % 4): [2 0 2]`,
-        breakdown:
-          '- Every operation applies to corresponding elements: 10*1=10, 20*2=40, 30*3=90.',
+        breakdown: "• 'a + b' adds matching positions: [1, 2] + [10, 20] = [11, 22].\n• 'a ** 2' squares every number: [2, 3, 4] ** 2 = [4, 9, 16].\n• 'arr % 6' calculates remainders: [10, 15, 20] % 6 = [4, 3, 2].\n• 'arr // 3' performs floor division: [10, 20] // 3 = [3, 6].",
       },
     },
     miniPractice: {
@@ -1122,20 +1104,20 @@ Modulo (a % 4): [2 0 2]`,
     ],
     theory: {
       partA: {
-        title: 'Universal Function Machinery',
-        concept: 'High-performance mathematical mappings',
-        explanation:
-          'A ufunc (universal function) is a function that operates on ndarrays in an element-by-element fashion. NumPy provides dozens of ufuncs implemented in compiled C: trigonometry (`sin`, `cos`), exponentials (`exp`, `log`), roots (`sqrt`), and rounding (`round`, `floor`, `ceil`).',
-        whyUseIt:
-          'Executing `np.sqrt(arr)` on 1 million numbers takes a few milliseconds, whereas `math.sqrt` inside a Python loop takes over a second.',
+        title: "Universal Function Machinery",
+        concept: "Fast universal functions: np.sqrt, np.abs, np.round, np.exp, np.log, and np.log10",
+        simpleAnalogy: "A universal function (ufunc) is like an automated assembly line workstation: thousands of parts roll past on a conveyor belt, and an industrial laser modifies each part with zero human delay.",
+        explanation: "• Universal functions (ufuncs) are pre-compiled C routines that execute element-wise at hardware speed.\n• np.sqrt(arr): Computes the square root of non-negative elements.\n• np.abs(arr): Computes the absolute value, turning negative numbers positive.\n• np.round(arr): Rounds elements to the nearest integer.\n• np.exp(arr): Computes natural exponential e^x (np.exp(0) == 1.0).\n• np.log(arr) computes natural log ln(x); np.log10(arr) computes base-10 logarithm (np.log10(100) == 2.0).",
+        whyUseIt: "Eliminates Python function call overhead and executes complex mathematical transformations at native CPU speed.",
         useCases: [
-          'Signal processing and audio frequencies with `sin` and `cos`',
-          'Logistic sigmoid and softmax activation functions in neural networks with `exp`',
+          "Signal processing and acoustics using logarithmic decibel scales (log10)",
+          "Exponential growth and decay models in finance and epidemiology (exp)",
+          "Distance calculations via Euclidean formulas (sqrt and abs)",
         ],
       },
       partB: {
-        title: 'Common Universal Functions',
-        concept: 'Mathematical transformations',
+        title: "Universal Functions (ufuncs) in Practice",
+        concept: "Applying sqrt, abs, round, exp, and log10 across arrays",
         code: `import numpy as np
 
 arr = np.array([-4, 9, 16])
@@ -1146,8 +1128,7 @@ print("Rounded values:", np.round(np.array([1.25, 2.75, 3.5])))`,
         output: `Absolute value: [ 4  9 16]
 Square root (valid for >= 0): [2. 3. 4.]
 Rounded values: [1. 3. 4.]`,
-        breakdown:
-          '- ufuncs produce float arrays where appropriate.\n- Invalid operations (like square root of negative numbers) produce `nan` with a warning.',
+        breakdown: "• 'np.sqrt([4, 9, 16])' computes square roots: [2.0, 3.0, 4.0].\n• 'np.abs([-5, 0, 7])' removes signs: [5, 0, 7].\n• 'np.round([1.2, 2.7, 3.5])' rounds values: [1.0, 3.0, 4.0].\n• 'np.exp(0)' evaluates to 1.0; 'np.log10(100)' evaluates to 2.0.",
       },
     },
     miniPractice: {
@@ -1214,20 +1195,20 @@ Rounded values: [1. 3. 4.]`,
     ],
     theory: {
       partA: {
-        title: 'Statistical Reductions',
-        concept: 'Collapsing arrays into statistical metrics',
-        explanation:
-          'Aggregation operations compute summary statistics over array elements: `sum()`, `min()`, `max()`, `mean()` (average), `median()`, `std()` (standard deviation), and `var()` (variance). When called without an axis, they reduce the entire array to a single scalar.',
-        whyUseIt:
-          'Essential for exploratory data analysis, dataset summaries, loss calculation, and metrics evaluation.',
+        title: "Statistical Reductions",
+        concept: "Statistical aggregation: sum, min, max, mean, median, std, and var",
+        simpleAnalogy: "Aggregation is taking a full stadium of individual spectator votes and condensing them into key statistics: the total vote count (sum), the average voter age (mean), the middle voter age (median), and how widely opinions vary (variance and standard deviation).",
+        explanation: "• arr.sum(): Calculates the total sum of all elements.\n• arr.mean(): Calculates the arithmetic average (sum / size).\n• np.median(arr): Finds the middle value after sorting (robust against extreme outliers).\n• arr.std(): Calculates the standard deviation, measuring how data spreads around the mean.\n• arr.var(): Calculates the variance, which is the square of standard deviation (var = std ** 2).",
+        whyUseIt: "Condenses millions of data points into actionable analytical summaries and statistical benchmarks.",
         useCases: [
-          'Calculating total quarterly revenue',
-          'Finding average patient age and age spread in medical clinical trials',
+          "Calculating mean customer spend and variance across transactions",
+          "Finding minimum and maximum temperatures across sensor networks",
+          "Computing standard deviation for anomaly and outlier detection",
         ],
       },
       partB: {
-        title: 'Aggregation Methods in Action',
-        concept: 'Summary statistics',
+        title: "Computing Summary Statistics",
+        concept: "Extracting sum, mean, median, standard deviation, and variance",
         code: `import numpy as np
 
 data = np.array([10, 20, 30, 40, 50])
@@ -1240,8 +1221,7 @@ print("Standard Deviation:", np.round(data.std(), 2))`,
 Minimum / Maximum: 10 / 50
 Mean Average: 30.0
 Standard Deviation: 14.14`,
-        breakdown:
-          '- `data.sum()`: 10+20+30+40+50 = 150.\n- `data.mean()`: 150 / 5 = 30.0.',
+        breakdown: "• 'arr.sum()' adds all numbers: [10, 20, 30].sum() = 60.\n• 'arr.mean()' computes average: [2, 4, 6].mean() = 4.0.\n• 'np.median([1, 10, 2, 9, 3])' sorts to [1, 2, 3, 9, 10] and picks the middle value 3.0.\n• 'arr.std()' measures spread; 'arr.var()' computes variance (std squared).",
       },
     },
     miniPractice: {
@@ -1308,20 +1288,20 @@ Standard Deviation: 14.14`,
     ],
     theory: {
       partA: {
-        title: 'The Geometry of Axes & Shape Reduction',
-        concept: 'Direction of aggregation along dimensions and resulting shapes',
-        explanation:
-          'In a 2D matrix: axis=0 points DOWNWARDS along rows (collapsing rows into column summaries). axis=1 points HORIZONTALLY across columns (collapsing columns into row summaries). Shape Reduction Rule: Reducing a matrix of shape (M, N) along axis=0 eliminates dimension 0 (the rows), leaving shape (N,). For example, a matrix of shape (5, 8) reduced via .mean(axis=0) or .sum(axis=0) produces a 1D vector of shape (8,). Conversely, reducing along axis=1 eliminates dimension 1, producing shape (M,).',
-        whyUseIt:
-          'Crucial for feature-wise normalization (e.g. mean per column) vs sample-wise normalization (e.g. total score per student).',
+        title: "The Geometry of Axes & Shape Reduction",
+        concept: "Multi-dimensional axes: Axis 0 (down columns) vs Axis 1 (across rows)",
+        simpleAnalogy: "Imagine a spreadsheet grid of student test scores where rows are students and columns are subjects. Summing along Axis 0 squashes down each column to give the class score per subject. Summing along Axis 1 squashes across each row to give each student's total score!",
+        explanation: "• In a 2D array of shape (M, N), axis=0 runs vertically down the rows, collapsing to shape (N,).\n• axis=1 runs horizontally across the columns, collapsing to shape (M,).\n• All aggregation functions accept axis: sum(axis=0), mean(axis=0), max(axis=0), min(axis=1).\n• matrix.max(axis=0) extracts column maximums; matrix.max(axis=1) extracts row maximums.\n• For shape (5, 8), matrix.mean(axis=0) produces an array of shape (8,).\n• Omitting the axis parameter aggregates all elements in the entire array into a single scalar.",
+        whyUseIt: "Performs grouped statistical calculations across features (columns) or samples (rows) without writing loops.",
         useCases: [
-          'Calculating mean test scores per subject: `scores.mean(axis=0)` (resulting shape: (features,))',
-          'Calculating total marks for each student: `scores.sum(axis=1)` (resulting shape: (samples,))',
+          "Calculating average exam scores per subject (axis=0)",
+          "Finding total sales generated by each regional store (axis=1)",
+          "Finding peak temperature recorded by each sensor over time (axis=1)",
         ],
       },
       partB: {
-        title: 'Visualizing Axis 0 vs Axis 1',
-        concept: 'Down columns vs across rows',
+        title: "Collapsing Dimensions Along Axis 0 and Axis 1",
+        concept: "Column-wise (axis=0) vs row-wise (axis=1) aggregations and max/min",
         code: `import numpy as np
 
 matrix = np.array([
@@ -1329,17 +1309,20 @@ matrix = np.array([
   [30, 40]
 ])
 
-print("axis=0 (down columns):", matrix.sum(axis=0), "shape:", matrix.sum(axis=0).shape)
-print("axis=1 (across rows):", matrix.sum(axis=1), "shape:", matrix.sum(axis=1).shape)
+print("axis=0 sum (columns):", matrix.sum(axis=0))
+print("axis=1 sum (rows):", matrix.sum(axis=1))
+print("matrix.max(axis=0):", matrix.max(axis=0))
+print("matrix.max(axis=1):", matrix.max(axis=1))
 
 # Example: (5, 8) matrix along axis=0 yields shape (8,)
 big_mat = np.zeros((5, 8))
 print("(5, 8) mean(axis=0) shape:", big_mat.mean(axis=0).shape)`,
-        output: `axis=0 (down columns): [40 60] shape: (2,)
-axis=1 (across rows): [30 70] shape: (2,)
+        output: `axis=0 sum (columns): [40 60]
+axis=1 sum (rows): [30 70]
+matrix.max(axis=0): [30 40]
+matrix.max(axis=1): [20 40]
 (5, 8) mean(axis=0) shape: (8,)`,
-        breakdown:
-          '- `axis=0`: [10+30, 20+40] = [40, 60] (one result per column, collapses rows).\n- `axis=1`: [10+20, 30+40] = [30, 70] (one result per row, collapses columns).\n- Shape rule: A matrix of shape (5, 8) along axis=0 collapses dimension 0, leaving shape (8,).',
+        breakdown: "• In a 2x2 matrix [[1, 2], [3, 4]], sum(axis=0) sums columns [1+3, 2+4] = [4, 6].\n• sum(axis=1) sums rows [1+2, 3+4] = [3, 7].\n• For matrix [[10, 20], [30, 40]], max(axis=0) is [30, 40]; max(axis=1) is [20, 40].\n• For a (5, 8) matrix, mean(axis=0) results in shape (8,).",
         visualArray: [
           ['10 (0,0)', '20 (0,1)'],
           ['30 (1,0)', '40 (1,1)'],
@@ -1414,21 +1397,20 @@ axis=1 (across rows): [30 70] shape: (2,)
     ],
     theory: {
       partA: {
-        title: 'Element-Wise Truth Testing & np.array_equal',
-        concept: 'Vectorized comparisons, masks & array equality',
-        explanation:
-          'When you apply comparison operators like `arr > 10`, NumPy evaluates every number independently, returning an array of Booleans (`[True, False, ...]`). `np.all()` checks if all elements are True; `np.any()` checks if at least one is True. Crucially, while `a == b` returns an element-wise array of booleans, `np.array_equal(a, b)` checks whether two entire arrays have the identical shape and all corresponding elements equal, returning a single scalar boolean (`True` or `False`).',
-        whyUseIt:
-          'Eliminates Python loops and if-statements, allowing instantaneous filtering of millions of numbers and exact array comparisons.',
+        title: "Element-Wise Truth Testing & np.array_equal",
+        concept: "Relational comparisons: >, <, ==, !=, np.all(), np.any(), and np.array_equal()",
+        simpleAnalogy: "Comparison is like holding up a quality inspection checklist to an entire production batch: every item that passes receives a True stamp, and every item that fails receives a False stamp.",
+        explanation: "• Evaluating a condition on an array (arr > 5) evaluates element-wise, creating a boolean array of the same shape.\n• np.any(condition): Returns True if AT LEAST ONE element satisfies the condition.\n• np.all(condition): Returns True ONLY IF EVERY single element satisfies the condition.\n• Comparisons support standard operators: >, <, >=, <=, ==, !=.\n• np.array_equal(a, b): Checks if two arrays have the exact same shape and identical elements.",
+        whyUseIt: "Creates conditional filters to detect anomalies, check bounds, and validate data integrity instantly.",
         useCases: [
-          'Checking if any sensor temperature exceeded a safety limit: `np.any(temps > 100)`',
-          'Verifying all transactions are valid: `np.all(balances >= 0)`',
-          'Testing if predicted output matches expected ground truth array: `np.array_equal(pred, target)`',
+          "Testing if any sensor values exceed safety thresholds (np.any(temp > 100))",
+          "Validating that all student grades are positive (np.all(grades >= 0))",
+          "Comparing experimental results against baseline benchmarks (np.array_equal)",
         ],
       },
       partB: {
-        title: 'Comparisons & np.array_equal in Action',
-        concept: 'Boolean mask generation vs single array equality',
+        title: "Boolean Mask Generation and Array Logic",
+        concept: "Testing conditions with >, any(), all(), and array_equal()",
         code: `import numpy as np
 
 arr = np.array([5, 12, 18, 3])
@@ -1446,8 +1428,7 @@ Are ALL elements > 0? True
 Is ANY element > 15? True
 array_equal([1, 2], [1, 2]): True
 arr == arr (element-wise): [ True  True  True  True]`,
-        breakdown:
-          '- `arr > 10` returns boolean array `[False, True, True, False]`.\n- `np.all` and `np.any` evaluate the boolean array to single truth values.\n- `np.array_equal(a, b)` evaluates whole-array equality and returns a single boolean scalar `True` or `False`.',
+        breakdown: "• 'arr > 5' on [2, 5, 8] produces [False, False, True].\n• 'np.all([1, 2, -1] > 0)' returns False because -1 is not positive.\n• 'np.any([1, 2, -1] < 0)' returns True because -1 is negative.\n• 'np.array_equal([1, 2], [1, 2])' returns True.",
       },
     },
     miniPractice: {
@@ -1523,21 +1504,20 @@ arr == arr (element-wise): [ True  True  True  True]`,
     ],
     theory: {
       partA: {
-        title: 'Filtering Arrays via Boolean Masks',
-        concept: 'Extracting data matching conditions & 1D Flattening Rule',
-        explanation:
-          'Boolean indexing extracts elements where a boolean mask is True: `arr[arr > 5]`. To combine conditions, you must use bitwise operators `&` (AND), `|` (OR), and `~` (NOT), and wrap each condition in parentheses: `arr[(arr > 5) & (arr < 10)]`. Fundamental Shape Rule: Boolean indexing ALWAYS flattens the selected elements into a 1D array of shape `(K,)`, regardless of the original dimensionality (even for 2D matrices or 3D tensors), because the number of matching elements per row is unpredictable.',
-        whyUseIt:
-          'Python `and`/`or` keywords evaluate whole-object truth, which fails on arrays. Bitwise `&` and `|` operate element-by-element.',
+        title: "Filtering Arrays via Boolean Masks",
+        concept: "Boolean indexing: arr[mask], combining with &, |, ~, and 1D flattening",
+        simpleAnalogy: "Imagine an automated filter sieve that only lets gold nuggets pass through while catching all dirt. Boolean indexing uses a True/False mask to extract only the elements that meet your criteria.",
+        explanation: "• Passing a boolean array inside brackets arr[mask] extracts only the elements where the mask is True.\n• The returned result is ALWAYS flattened into a 1D array because row counts can vary.\n• Bitwise operators must be used instead of Python keywords: & (AND), | (OR), ~ (NOT).\n• Always enclose individual conditions in parentheses: (arr > 10) & (arr < 20).\n• arr[arr % 2 != 0] filters odd numbers; ~mask inverts True to False.",
+        whyUseIt: "Filters and queries high-dimensional arrays at lightning speed without allocating intermediate lists.",
         useCases: [
-          'Filtering sensor data above a critical temperature threshold',
-          'Selecting active users with purchase frequency > 0 and account age > 30',
-          'Extracting positive elements from a 2D matrix into a 1D flattened vector',
+          "Extracting all customer purchases between $50 and $200",
+          "Isolating non-zero signal readings from background noise",
+          "Filtering out negative values or error codes from sensor telemetry",
         ],
       },
       partB: {
-        title: 'Boolean Indexing with Multiple Conditions & 1D Shape',
-        concept: 'Bitwise logical masking and 1D flattened output shape',
+        title: "Extracting Subsets with Boolean Indexing",
+        concept: "Filtering with arr[condition], bitwise &, |, ~, and result flattening",
         code: `import numpy as np
 
 scores = np.array([45, 88, 92, 59, 78])
@@ -1552,8 +1532,7 @@ positives = matrix[matrix > 0]
 print("2D filtered positives:", positives, "shape:", positives.shape)`,
         output: `Passing scores: [88 92 78]
 2D filtered positives: [2 3] shape: (2,)`,
-        breakdown:
-          '- `scores >= 60` produces booleans `[False, True, True, False, True]`.\n- `scores[mask]` filters the array to `[88, 92, 78]`.\n- Crucial: `matrix[matrix > 0]` flattens multi-dimensional matches into a 1D array with shape (2,).',
+        breakdown: "• 'arr[arr > 10]' on [5, 12, 8, 20] extracts [12, 20].\n• '(arr > 10) & (arr < 20)' combines conditions with bitwise AND.\n• '~mask' flips boolean flags (True becomes False).\n• Filtering a 2D matrix [[-1, 2], [3, -4]] with arr > 0 flattens into 1D shape (2,): [2, 3].",
       },
     },
     miniPractice: {
@@ -1626,21 +1605,20 @@ print("2D filtered positives:", positives, "shape:", positives.shape)`,
     ],
     theory: {
       partA: {
-        title: 'Vectorized Conditional Selection',
-        concept: 'Ternary transformation and index recovery',
-        explanation:
-          '`np.where(condition, x, y)` returns elements chosen from x or y depending on condition. If given condition alone, `np.where(condition)` returns coordinate tuples of indices where the condition was True.',
-        whyUseIt:
-          'Enables instant data transformations, capping outliers, and creating label columns without slow Python loops.',
+        title: "Vectorized Conditional Selection",
+        concept: "Conditional selection: np.where(cond, x, y) and coordinate retrieval np.where(cond)",
+        simpleAnalogy: "np.where() is a universal fork in the road: 'If the condition is met, take Path A; otherwise, take Path B.' It transforms arrays conditionally across all elements simultaneously.",
+        explanation: "• Ternary selection: np.where(condition, if_true, if_false) evaluates condition element-wise.\n• Elements meeting the condition take values from if_true; otherwise from if_false.\n• Replacing values conditionally: np.where(arr < 0, 0, arr) replaces negative numbers with 0 while keeping positive numbers.\n• 1-argument form: np.where(condition) returns a tuple of index coordinate arrays where condition is True.\n• np.where(condition)[0] extracts the 1D index array of matches.",
+        whyUseIt: "Replaces slow if-else loops with vectorized transformations and pinpoints exact indices of interest.",
         useCases: [
-          'Binary classification: `np.where(probs >= 0.5, 1, 0)`',
-          'Replacing negative values with 0: `np.where(arr < 0, 0, arr)`',
-          'Finding coordinate indices of target objects in a matrix',
+          "Assigning categorical labels: np.where(score >= 60, 'Pass', 'Fail')",
+          "Capping minimum signal values to zero without modifying valid signals",
+          "Finding coordinate indices of target objects in satellite images",
         ],
       },
       partB: {
-        title: 'np.where() in Practice',
-        concept: 'Ternary replacement vs index recovery',
+        title: "Vectorized Conditional Logic with np.where()",
+        concept: "Ternary transformation and extracting matching coordinate indices",
         code: `import numpy as np
 
 scores = np.array([45, 85, 92, 55])
@@ -1654,8 +1632,7 @@ failing_indices = np.where(scores < 60)
 print("Failing student indices:", failing_indices[0])`,
         output: `Grades: ['Fail' 'Pass' 'Pass' 'Fail']
 Failing student indices: [0 3]`,
-        breakdown:
-          '- `np.where(cond, "Pass", "Fail")` produces element-wise string labels.\n- `np.where(cond)` returns index coordinates `[0, 3]`.',
+        breakdown: "• 'np.where(scores >= 60, \"Pass\", \"Fail\")' evaluates [50, 75] to ['Fail', 'Pass'].\n• 'np.where(arr < 0, 0, arr)' zeroes out negative values while preserving positives.\n• 'np.where([True, False, True])[0]' returns index positions [0, 2].\n• 'np.where([5, 15] > 10, 100, 0)' produces [0, 100].",
       },
     },
     miniPractice: {
@@ -1722,20 +1699,20 @@ Failing student indices: [0 3]`,
     ],
     theory: {
       partA: {
-        title: 'Practical Data Processing Pipelines',
-        concept: 'Chaining masks, reductions, and substitutions',
-        explanation:
-          'Real data processing tasks combine operations: filtering outliers, computing conditional averages, counting qualifying records using `(mask).sum()`, and standardizing values.',
-        whyUseIt:
-          'Forms the core data engineering skillset required for Pandas, machine learning feature pipelines, and business intelligence.',
+        title: "Practical Data Processing Pipelines",
+        concept: "Data processing pipelines: threshold counting, masked statistics, and clipping",
+        simpleAnalogy: "Real-world data is raw and imperfect, like gemstones straight from a mine. A data processing pipeline washes the stones, discards debris (filtering), clips rough edges (capping), and produces polished statistical metrics.",
+        explanation: "• Counting threshold matches: (scores >= 80).sum() counts how many elements satisfy the condition (True counts as 1, False as 0).\n• Conditional aggregation: scores[scores > 50].mean() calculates the mean of only qualifying items.\n• Summing subsets: arr[arr < 0].sum() computes the sum of negative numbers.\n• Clamping boundaries: np.where(arr > 100, 100, arr) clamps extreme outliers to 100 without importing extra libraries.\n• Combining masks and ufuncs forms the core of real-world data preprocessing.",
+        whyUseIt: "Enables production-grade data cleansing, anomaly handling, and KPI calculations on large datasets.",
         useCases: [
-          'Calculating churn rates and thresholding customer risk',
-          'Detecting anomalous sensor spikes and replacing them with median thresholds',
+          "Calculating pass rates and average passing scores in academic systems",
+          "Clamping financial returns to risk thresholds in quantitative portfolios",
+          "Filtering out corrupted sensor readings before feeding neural networks",
         ],
       },
       partB: {
-        title: 'Data Processing Case Study',
-        concept: 'Student grade analytics',
+        title: "Building Real Data Cleansing Pipelines",
+        concept: "Threshold counting with .sum(), subset statistics, and outlier clamping",
         code: `import numpy as np
 
 marks = np.array([65, 82, 90, 45, 88, 72])
@@ -1750,8 +1727,7 @@ print("Students >= 80:", high_achievers)
 print("Passing Average:", np.round(pass_avg, 1))`,
         output: `Students >= 80: 3
 Passing Average: 79.4`,
-        breakdown:
-          '- `(marks >= 80).sum()` treats True as 1 and False as 0, yielding 3 students.\n- `marks[marks >= 50].mean()` filters then computes the mean average.',
+        breakdown: "• '(scores >= 80).sum()' counts elements scoring 80+: evaluates True flags to 1s.\n• 'scores[scores > 50].mean()' calculates the average of only passing scores.\n• 'np.where(arr > 100, 100, arr)' clamps values to a ceiling of 100.\n• 'arr[arr < 0].sum()' sums negative entries: [-5, 10, -15, 20] yields -20.",
       },
     },
     miniPractice: {
@@ -1822,21 +1798,20 @@ Passing Average: 79.4`,
     ],
     theory: {
       partA: {
-        title: 'What is Broadcasting?',
-        concept: 'Stretching scalars and dimensions of size 1',
-        explanation:
-          'Broadcasting describes how NumPy treats arrays with different shapes during arithmetic operations. The simplest case is scalar broadcasting: multiplying an array like `np.ones((2, 3)) * 5` stretches the scalar 5 across all 6 elements, yielding an array filled with 5s whose sum is 6 * 5 = 30. For multi-dimensional arrays, the smaller array is broadcast across the larger array along dimensions of size 1 with zero extra memory copying.',
-        whyUseIt:
-          'Enables vector arithmetic between matrices, scalars, and row/column vectors with zero extra memory copying overhead.',
+        title: "What is Broadcasting?",
+        concept: "Broadcasting foundation: scalar expansion, matching axes, and virtual stretching",
+        simpleAnalogy: "Broadcasting is the magic of efficiency: instead of printing 1,000 separate paper copies of an announcement for each person, the manager makes a single announcement over the loudspeaker. The single scalar broadcasts across everyone with zero wasted paper!",
+        explanation: "• Broadcasting allows arithmetic operations between arrays of different shapes without copying data in memory.\n• Scalar broadcasting: arr + 10 adds 10 to every single element in an array of any shape.\n• 1D to 2D broadcasting: Adding a 1D row of length N to an (M, N) matrix stretches the row down across all M rows.\n• Broadcasting along singleton axes: Shape (5, 3) and (5, 1) broadcast together into shape (5, 3).\n• Multi-dimensional: (8, 1, 6) + (1, 5, 1) broadcasts to shape (8, 5, 6).",
+        whyUseIt: "Performs cross-dimensional operations with optimal memory performance, preventing out-of-memory crashes on massive arrays.",
         useCases: [
-          'Scaling an entire matrix created via `np.ones((2, 3))` by a factor or scalar',
-          'Centering data: subtracting the column mean vector from every row in a matrix',
-          'Scaling image color channels by RGB multipliers',
+          "Subtracting mean feature values across tabular datasets",
+          "Adding color brightness offsets across RGB image pixel arrays",
+          "Scaling audio audio channels by stereo volume weights",
         ],
       },
       partB: {
-        title: 'Broadcasting in Action',
-        concept: 'Scalar and Row vector broadcasting',
+        title: "Broadcasting Arrays Across Different Shapes",
+        concept: "Scalar arithmetic, row-to-matrix broadcasting, and singleton dimensions",
         code: `import numpy as np
 
 # Scalar broadcasting across np.ones((2, 3))
@@ -1856,8 +1831,7 @@ print("Broadcasted sum:\n", matrix + row)`,
 Broadcasted sum:
  [[11 22 33]
  [14 25 36]]`,
-        breakdown:
-          '- `np.ones((2, 3)) * 5` broadcasts scalar 5 to all 2x3=6 elements (sum = 30).\n- `matrix` has shape (2, 3). `row` has shape (3,).\n- `row` stretches along the rows, adding [10, 20, 30] to both rows without allocating memory.',
+        breakdown: "• 'np.array([1, 2, 3]) + 10' broadcasts 10 across all 3 elements: [11, 12, 13].\n• Adding [10, 20] to a 2x2 matrix [[1, 2], [3, 4]] yields [[11, 22], [13, 24]].\n• Shape (5, 3) + (5, 1) yields (5, 3); shape (8, 1, 6) + (1, 5, 1) yields (8, 5, 6).\n• '(np.ones((2, 3)) * 5).sum()' computes 6 elements * 5.0 = 30.0.",
       },
     },
     miniPractice: {
@@ -1929,20 +1903,20 @@ Broadcasted sum:
     ],
     theory: {
       partA: {
-        title: 'The Two Rules of Broadcasting',
-        concept: 'Right-to-left trailing dimension alignment',
-        explanation:
-          'When operating on two arrays, NumPy compares shapes element-wise starting with trailing (rightmost) dimensions. Two dimensions are compatible when: 1. They are equal, OR 2. One of them is 1. If neither condition is met, NumPy raises ValueError: operands could not be broadcast together.',
-        whyUseIt:
-          'Mastering these rules prevents unexpected ValueError crashes when manipulating high-dimensional arrays.',
+        title: "The Two Rules of Broadcasting",
+        concept: "The Two Rules of Broadcasting: Trailing alignment and compatibility requirements",
+        simpleAnalogy: "Think of checking if two gears will mesh together: two axes can mesh if they have the exact same tooth count, or if one gear has a flexible universal adapter of size 1 that expands to fit.",
+        explanation: "• Alignment begins at the TRAILING (rightmost) dimension and moves left.\n• Rule: Two dimensions are compatible if: (1) They are equal, OR (2) One of them is 1.\n• If a dimension is missing in one array, it is prepended with 1.\n• Incompatible shapes raise a ValueError (e.g. (4, 3) and (4, 2) fail because 3 != 2 and neither is 1).\n• Shape (4, 3) and (3, 4) CANNOT broadcast together because 3 != 4 on the trailing axis.\n• Shape (4, 1) and (1, 7) broadcast cleanly to shape (4, 7).",
+        whyUseIt: "Enables precise mathematical verification of tensor shapes before executing heavy computations.",
         useCases: [
-          'Broadcasting batch predictions (N, 1) against target labels (N, K)',
-          'Outer product generation by aligning (N, 1) with (1, M)',
+          "Matrix-vector multiplication compatibility verification",
+          "Batch data processing where batch dimension is prepended",
+          "Time-series alignment across sensors with identical frequencies",
         ],
       },
       partB: {
-        title: 'Broadcasting Compatibility Examples',
-        concept: 'Valid vs invalid shapes',
+        title: "Verifying Shape Compatibility with Broadcasting Rules",
+        concept: "Right-to-left trailing alignment and identifying ValueError mismatches",
         code: `import numpy as np
 
 # Compatible: (4, 1) and (1, 5) -> Result: (4, 5)
@@ -1953,8 +1927,7 @@ print("Broadcasted shape (4, 1) + (1, 5):", (a + b).shape)
 # Incompatible: (4, 3) and (4, 2)
 # Trailing dimensions 3 and 2 do not match and neither is 1 -> ValueError!`,
         output: `Broadcasted shape (4, 1) + (1, 5): (4, 5)`,
-        breakdown:
-          '- Dimension 1: 1 stretches to 5.\n- Dimension 0: 1 stretches to 4.\n- Result is (4, 5).',
+        breakdown: "• (4, 1) and (1, 7) align: dimensions 1 expand to 4 and 7, producing (4, 7).\n• (3, 1) and (3,) align: (3,) is treated as (1, 3), producing (3, 3).\n• (4, 3) and (4, 2) fail: trailing dimensions 3 and 2 are unequal and neither is 1.\n• (4, 3) and (3, 4) raise a ValueError because trailing dimensions 3 and 4 do not match.",
       },
     },
     miniPractice: {
@@ -2031,21 +2004,20 @@ print("Broadcasted shape (4, 1) + (1, 5):", (a + b).shape)
     ],
     theory: {
       partA: {
-        title: 'Synthesis of Broadcasting Architecture',
-        concept: 'Multi-dimensional shape compatibility and outer operations',
-        explanation:
-          'Broadcasting works across any number of dimensions by comparing shapes element-wise from right to left: two dimensions are compatible if they are equal, or if one of them is 1. For example, adding `np.zeros((10, 1, 4))` and `np.zeros((1, 5, 4))` matches: trailing 4==4, middle 1 stretches to 5, and leading 1 stretches to 10, producing shape `(10, 5, 4)`. Similarly, multiplying column vector `np.arange(3).reshape(3, 1)` by row vector `np.arange(3)` broadcasts to form a (3, 3) outer multiplication grid.',
-        whyUseIt:
-          'Broadcasting is the backbone of feature engineering, image data augmentation, and loss function calculation.',
+        title: "Synthesis of Broadcasting Architecture",
+        concept: "Broadcasting synthesis: Outer products, dataset normalization, and coordinate grids",
+        simpleAnalogy: "A master clockmaker combines vertical and horizontal gear mechanisms into a master clockwork: vertical column vectors and horizontal row vectors combine to construct an entire 2D coordinate mesh or multiplication table in a single breath.",
+        explanation: "• Outer multiplication: Multiplying an (N, 1) column vector by an (N,) or (1, N) row vector creates an (N, N) matrix.\n• Column normalization: Subtracting column means (shape (N,)) from a dataset of shape (M, N) normalizes each column independently: matrix - row_vector.\n• Multi-dimensional expansion: (10, 1, 4) + (1, 5, 4) expands to shape (10, 5, 4).\n• This level synthesizes broadcasting rules to defeat high-dimensional computational challenges.",
+        whyUseIt: "Calculates all pairwise interactions, distances, and covariance grids in machine learning algorithms in 1 line.",
         useCases: [
-          'Z-score normalization: `(X - X.mean(axis=0)) / X.std(axis=0)`',
-          'Pairwise distance and multiplication matrices via outer broadcasting',
-          'Multi-dimensional batch audio/image tensor alignment: `(10, 1, 4) + (1, 5, 4) -> (10, 5, 4)`',
+          "Computing pairwise Euclidean distance matrices between geographical coordinates",
+          "Creating 2D spatial coordinate meshes (np.meshgrid) for image warping",
+          "Column-wise standardization of machine learning training data",
         ],
       },
       partB: {
-        title: 'Outer Multiplication & Multi-Dim Broadcasting',
-        concept: '(3, 1) * (3,) outer product and 3D broadcasting',
+        title: "Outer Grid Synthesis and Pairwise Operations",
+        concept: "Constructing (N, M) interaction grids from (N, 1) and (1, M) vectors",
         code: `import numpy as np
 
 # Outer multiplication grid: (3, 1) * (3,) -> (3, 3)
@@ -2061,8 +2033,7 @@ print("Broadcasted 3D sum shape:", (a + b).shape)`,
  [0 1 2]
  [0 2 4]]
 Broadcasted 3D sum shape: (10, 5, 4)`,
-        breakdown:
-          '- `np.arange(3).reshape(3, 1) * np.arange(3)` stretches rows and columns to generate a 3x3 outer multiplication table.\n- `(10, 1, 4) + (1, 5, 4)`: dimensions 1 stretch to 5 and 10, producing shape (10, 5, 4).',
+        breakdown: "• 'np.arange(3).reshape(3, 1) * np.arange(3)' multiplies shape (3, 1) by (1, 3) to form a 3x3 table.\n• '(np.zeros((10, 1, 4)) + np.zeros((1, 5, 4)))' yields shape (10, 5, 4).\n• Normalizing an (M, N) dataset requires a mean vector of shape (N,) matching the column count.\n• Subtracting row_vector from matrix broadcasts across every row.",
       },
     },
     miniPractice: {
@@ -2133,21 +2104,20 @@ Broadcasted 3D sum shape: (10, 5, 4)`,
     ],
     theory: {
       partA: {
-        title: 'Joining Arrays Along Existing Axes',
-        concept: 'np.concatenate syntax across 1D and 2D arrays',
-        explanation:
-          '`np.concatenate([arr1, arr2, ...], axis=0)` joins arrays along the specified axis. All input arrays must have identical shapes except in the dimension corresponding to axis. For example, concatenating `np.ones((2, 5))` and `np.ones((4, 5))` along `axis=0` sums their rows: (2+4, 5) -> shape `(6, 5)`. For 1D arrays, concatenating `np.arange(3)` (length 3) and `np.arange(4)` (length 4) yields a 1D array of total length 7.',
-        whyUseIt:
-          'Essential for merging batches of training data or appending newly received sensor readings.',
+        title: "Joining Arrays Along Existing Axes",
+        concept: "Array concatenation: np.concatenate([a, b], axis=...) and dimension preservation",
+        simpleAnalogy: "Concatenation is like using industrial glue to bond two prefabricated bridge segments: you can join them end-to-end to make a longer bridge (axis 0), or side-by-side to make a wider bridge (axis 1). The joining edges must match perfectly in size!",
+        explanation: "• np.concatenate([a, b], axis=0) stacks arrays vertically along rows, preserving column count.\n• np.concatenate([a, b], axis=1) attaches arrays horizontally along columns, preserving row count.\n• All non-concatenating dimensions must match exactly, or NumPy raises a ValueError.\n• Concatenating two 1D arrays of lengths 3 and 4 results in a 1D array of length 7.\n• Concatenating (3, 4) and (3, 4) along axis=1 produces shape (3, 8).",
+        whyUseIt: "Merges new batches of data or additional feature columns into existing datasets.",
         useCases: [
-          'Combining training batches: `np.concatenate([np.ones((2, 5)), np.ones((4, 5))], axis=0)` -> (6, 5)',
-          'Merging 1D sequences: `np.concatenate([np.arange(3), np.arange(4)])` -> length 7',
-          'Merging feature tables horizontally: `np.concatenate([features, labels], axis=1)`',
+          "Appending incoming sensor telemetry rows to an existing historical table (axis=0)",
+          "Combining extracted feature columns with raw data matrices (axis=1)",
+          "Stitching adjacent camera image strips into a wide panoramic image",
         ],
       },
       partB: {
-        title: 'Concatenating Along Axis 0 and Axis 1',
-        concept: 'Row-wise vs column-wise concatenation and 1D joining',
+        title: "Joining Arrays Along Existing Axes",
+        concept: "Row-wise concatenation (axis=0) and column-wise concatenation (axis=1)",
         code: `import numpy as np
 
 a = np.array([[1, 2], [3, 4]])
@@ -2166,8 +2136,7 @@ print("np.arange concat length:", len(range_cat))`,
         output: `axis=0 shape: (4, 2)
 np.ones axis=0 shape: (6, 5)
 np.arange concat length: 7`,
-        breakdown:
-          '- `axis=0` adds rows: (2+2, 2) = (4, 2).\n- `np.ones((2, 5))` and `np.ones((4, 5))` along axis=0 form shape (6, 5).\n- `np.arange(3)` and `np.arange(4)` concatenate end-to-end to length 7.',
+        breakdown: "• 'np.concatenate([a, b])' joins 1D arrays: [1, 2] and [3, 4] becomes [1, 2, 3, 4].\n• Along axis=1: two (3, 4) matrices join to form shape (3, 8).\n• Along axis=0: shape (2, 5) and (4, 5) join to form shape (6, 5).\n• Passing mismatched non-concatenation dimensions raises a ValueError.",
       },
     },
     miniPractice: {
@@ -2234,21 +2203,20 @@ np.arange concat length: 7`,
     ],
     theory: {
       partA: {
-        title: 'Stacking Arrays into New Dimensions',
-        concept: 'np.stack creating new axes & ndim increment',
-        explanation:
-          'While `np.concatenate` keeps the number of dimensions (`ndim`) constant, `np.stack([a, b], axis=0)` stacks arrays along a brand new axis, increasing `ndim` by 1! For example, stacking 3 arrays of shape (10,) along `axis=0` via `np.stack([a, b, c], axis=0)` creates a 2D matrix of shape `(3, 10)` (total size 30). Stacking along `axis=-1` creates shape `(10, 3)`.',
-        whyUseIt:
-          'Crucial for stacking individual 2D image channels (R, G, B) into a 3D color tensor or combining individual 1D feature vectors into batch matrices.',
+        title: "Stacking Arrays into New Dimensions",
+        concept: "Dimensional expansion: np.stack() creating a new axis (ndim increases by 1)",
+        simpleAnalogy: "Unlike concatenation which extends an existing table, stacking is taking two individual 2D blueprint drawings and placing them on top of each other to form a 3D architectural model. You create an entirely new axis of depth!",
+        explanation: "• np.stack([a, b], axis=...) joins arrays along a BRAND NEW axis, increasing ndim by 1.\n• Concatenate joins along an existing axis; stack creates a new dimension.\n• All input arrays MUST have the exact same shape.\n• Stacking three 1D arrays of shape (10,) along axis=0 gives shape (3, 10); along axis=1 gives (10, 3).\n• Stacking with axis=-1 inserts the new dimension at the trailing end: three (4, 5) arrays become (4, 5, 3).",
+        whyUseIt: "Packages individual frames or feature maps into multi-dimensional tensor batches for deep learning.",
         useCases: [
-          'Stacking R, G, B color channels into an RGB image: `np.stack([r, g, b], axis=-1)`',
-          'Stacking 3 feature vectors of shape (10,) along axis=0: `(3, 10)` with size 30',
-          'Stacking audio microphone channel recordings',
+          "Stacking separate Red, Green, and Blue 2D grayscale plates into a 3D color image (axis=-1)",
+          "Batching multiple patient ECG recordings into a 3D tensor for recurrent neural nets",
+          "Stacking time-lapse camera photos into a video clip",
         ],
       },
       partB: {
-        title: 'stack() vs concatenate()',
-        concept: 'Dimension increase comparison and ndim',
+        title: "Constructing New Axes with np.stack()",
+        concept: "Increasing ndim by 1, comparing axis=0, axis=1, and trailing axis=-1",
         code: `import numpy as np
 
 x = np.array([1, 2, 3])
@@ -2265,8 +2233,7 @@ print("stack total size:", stacked.size, "| ndim:", stacked.ndim)`,
         output: `concatenate shape: (6,)
 stack 3 vectors axis=0 shape: (3, 3)
 stack total size: 9 | ndim: 2`,
-        breakdown:
-          '- `np.stack` increases `ndim` by 1, turning 1D vectors into a 2D matrix.\n- Stacking 3 arrays of shape (10,) along axis=0 yields shape (3, 10) with size 30.',
+        breakdown: "• Stacking three (10,) arrays along axis=0 creates shape (3, 10).\n• Stacking along axis=1 creates shape (10, 3).\n• Stacking three (4, 5) arrays with axis=-1 creates shape (4, 5, 3).\n• Unlike concatenate, np.stack requires all input arrays to share identical shapes.",
       },
     },
     miniPractice: {
@@ -2333,21 +2300,20 @@ stack total size: 9 | ndim: 2`,
     ],
     theory: {
       partA: {
-        title: 'Convenient Stacking Helpers: vstack & hstack',
-        concept: 'vstack and hstack semantics with 1D and 2D arrays',
-        explanation:
-          '`np.vstack` stacks arrays vertically (along rows / axis 0). For 1D arrays `[1, 2]` and `[3, 4]`, it creates a 2D matrix of shape `(2, 2)`. For 2D matrices like `np.zeros((3, 4))` and `np.zeros((2, 4))`, it stacks them to shape `(5, 4)`.\n\n`np.hstack` stacks arrays horizontally (along columns / axis 1). For 1D arrays `[1, 2]` and `[3, 4]`, it concatenates them horizontally into a 1D vector of shape `(4,)`. For 2D matrices like `np.zeros((3, 2))` and `np.zeros((3, 5))`, it appends columns to shape `(3, 7)`.',
-        whyUseIt:
-          'More intuitive and less error-prone than remembering explicit axis numbers for common 2D operations.',
+        title: "Convenient Stacking Helpers: vstack & hstack",
+        concept: "Stacking convenience helpers: np.vstack() vs np.hstack() and 1D behavior",
+        simpleAnalogy: "Remembering axis numbers can be tricky. vstack and hstack are intuitive shortcuts: vstack stacks vertically (top to bottom like pancakes 🥞), while hstack stacks horizontally (left to right like books on a shelf 📚).",
+        explanation: "• np.vstack([a, b]): Stacks arrays vertically (row-wise, adding rows).\n• np.hstack([a, b]): Stacks arrays horizontally (column-wise, adding columns).\n• 1D array behavior: vstack stacks two 1D arrays into a 2D matrix (shape (2, N)); hstack connects them into a longer 1D array (shape (2N,)).\n• For 2D matrices: vstack requires matching column counts; hstack requires matching row counts.",
+        whyUseIt: "Provides concise, readable code for assembling datasets without explicitly calculating axis indices.",
         useCases: [
-          'Appending new sample rows to a dataset with `np.vstack`: `(3, 4) + (2, 4) -> (5, 4)`',
-          'Appending new feature columns to existing records with `np.hstack`: `(3, 2) + (3, 5) -> (3, 7)`',
-          'Stacking 1D feature arrays into rows via `np.vstack([a, b])` -> shape `(2, len)`',
+          "Quickly appending a header row or summary row to a table (vstack)",
+          "Combining left and right stereo audio microphone channels (hstack)",
+          "Assembling matrix blocks in scientific physics models",
         ],
       },
       partB: {
-        title: 'vstack vs hstack in Practice',
-        concept: 'Vertical vs horizontal merging of 1D and 2D shapes',
+        title: "Vertical and Horizontal Stacking in Practice",
+        concept: "Using np.vstack for rows and np.hstack for columns across 1D and 2D arrays",
         code: `import numpy as np
 
 # 1D stacking behavior
@@ -2366,8 +2332,7 @@ print("2D hstack (3, 2) + (3, 5) shape:", mat_h.shape) # (3, 7)`,
 1D hstack shape (concatenated): (4,)
 2D vstack (3, 4) + (2, 4) shape: (5, 4)
 2D hstack (3, 2) + (3, 5) shape: (3, 7)`,
-        breakdown:
-          '- `np.vstack([a, b])` on two 1D arrays creates shape (2, 2).\n- `np.hstack([a, b])` on two 1D arrays flattens horizontally into shape (4,).\n- Stacking 2D matrices: vstack adds rows (3+2=5 -> (5, 4)); hstack adds columns (2+5=7 -> (3, 7)).',
+        breakdown: "• For two 1D arrays [1, 2] and [3, 4]: vstack yields a 2D matrix (2, 2); hstack yields 1D shape (4,).\n• 'np.vstack([zeros((3, 4)), zeros((2, 4))])' forms shape (5, 4).\n• 'np.hstack([zeros((3, 2)), zeros((3, 5))])' forms shape (3, 7).",
       },
     },
     miniPractice: {
@@ -2434,21 +2399,20 @@ print("2D hstack (3, 2) + (3, 5) shape:", mat_h.shape) # (3, 7)`,
     ],
     theory: {
       partA: {
-        title: 'Partitioning Arrays: np.split & np.array_split',
-        concept: 'np.split along axis=0 and axis=1 across 1D and 2D arrays',
-        explanation:
-          '`np.split(arr, sections, axis=0)` divides an array into equal sections along the given axis. If the dimension cannot be divided equally, `np.split` raises a ValueError (use `np.array_split()` for unequal splits). For 2D matrices of shape (6, 8):\n- `np.split(matrix, 2, axis=0)` cuts rows in half: produces two sub-arrays each of shape `(3, 8)`.\n- `np.split(matrix, 4, axis=1)` cuts columns into 4 slices: produces four sub-arrays each of shape `(6, 2)`.',
-        whyUseIt:
-          'Essential for splitting datasets into train/validation/test folds for cross-validation and partitioning feature matrices.',
+        title: "Partitioning Arrays: np.split & np.array_split",
+        concept: "Partitioning arrays: np.split() equal division vs np.array_split() unequal handling",
+        simpleAnalogy: "Splitting is like slicing a loaf of bread: you can cut it into perfectly equal sandwich slices (np.split), or if the loaf doesn't divide evenly among your friends, you can make slightly different sized slices without breaking the knife (np.array_split).",
+        explanation: "• np.split(arr, sections): Splits an array into equal subarrays. If it cannot divide equally, it raises a ValueError.\n• np.array_split(arr, sections): Safely splits arrays into near-equal sections without raising an error for non-divisible lengths.\n• Splitting 2D arrays: axis=0 splits along rows (top to bottom); axis=1 splits along columns (left to right).\n• Splitting a (6, 8) matrix with np.split(matrix, 2, axis=0) yields two (3, 8) submatrices.\n• Splitting a (6, 8) matrix with np.split(matrix, 4, axis=1) yields four (6, 2) submatrices.",
+        whyUseIt: "Divides large datasets into train/validation/test partitions and distributes chunks across parallel CPU cores.",
         useCases: [
-          'K-Fold cross validation dataset splitting',
-          'Splitting a (6, 8) matrix along axis=0 into two (3, 8) chunks',
-          'Splitting a (6, 8) matrix along axis=1 into four (6, 2) chunks',
+          "Splitting machine learning datasets into training and testing folds (K-Fold cross validation)",
+          "Dividing video streams into equal 30-frame scene clips",
+          "Chunking large matrix calculations for multiprocessing worker threads",
         ],
       },
       partB: {
-        title: 'Splitting Arrays in Practice',
-        concept: 'Equal, unequal, and 2D multi-axis splits',
+        title: "Partitioning Data with split and array_split",
+        concept: "Equal division requirements, safe array_split, and multi-axis splitting",
         code: `import numpy as np
 
 # 1D split
@@ -2469,8 +2433,7 @@ print("axis=1 split sub-array shape:", sub_cols[0].shape)`,
         output: `1D Part 1: [0 1 2 3 4]
 axis=0 split sub-array shape: (3, 8)
 axis=1 split sub-array shape: (6, 2)`,
-        breakdown:
-          '- `np.split(arr, 2)` divides 10 elements into two groups of 5.\n- `np.split(matrix, 2, axis=0)` on a (6, 8) matrix splits rows into two (3, 8) sub-arrays.\n- `np.split(matrix, 4, axis=1)` on a (6, 8) matrix splits columns into four (6, 2) sub-arrays.',
+        breakdown: "• 'np.split(arange(6), 3)' creates 3 equal subarrays of length 2.\n• 'np.split(arange(10), 3)' raises ValueError because 10 is not divisible by 3.\n• 'np.array_split(arange(10), 3)' divides safely into chunks of sizes 4, 3, and 3.\n• Splitting (6, 8) with axis=0 (2 parts) yields (3, 8); axis=1 (4 parts) yields (6, 2).",
       },
     },
     miniPractice: {
@@ -2542,20 +2505,20 @@ axis=1 split sub-array shape: (6, 2)`,
     ],
     theory: {
       partA: {
-        title: 'Sorting Values vs Ranking Indices',
-        concept: 'np.sort vs np.argsort',
-        explanation:
-          '`np.sort(arr)` returns a sorted copy of the array. `np.argsort(arr)` returns the integer indices that would sort the array in ascending order. Using argsort allows you to sort multiple related arrays simultaneously.',
-        whyUseIt:
-          'Vital for ranking records, finding top-K recommendations, and sorting parallel arrays.',
+        title: "Sorting Values vs Ranking Indices",
+        concept: "Ordering and ranking: np.sort(), np.argsort(), np.argmax(), and np.argmin()",
+        simpleAnalogy: "Think of an Olympic sprint race: np.sort tells you the finishing times in order (9.8s, 9.9s, 10.1s). np.argsort tells you the lane numbers of who won Gold, Silver, and Bronze (Lane 4, Lane 2, Lane 6). np.argmax immediately identifies the champion's lane!",
+        explanation: "• np.sort(arr): Returns a sorted copy of array values in ascending order.\n• np.sort(arr)[::-1]: Sorts an array in descending order (highest to lowest).\n• np.argsort(arr): Returns the INDICES that would sort the array, essential for ranking and indirect sorting.\n• np.argmax(arr): Returns the index of the maximum value in the array.\n• np.argmin(arr): Returns the index of the minimum value in the array.",
+        whyUseIt: "Ranks candidates, sorts search results, and pinpoints winner positions across high-dimensional arrays.",
         useCases: [
-          'Finding indices of top 5 highest confidence predictions: `np.argsort(probs)[-5:]`',
-          'Sorting patient names by patient test scores',
+          "Building video game leaderboards and finding top 3 scorers",
+          "Finding the nearest enemy in spatial game AI using argmin on distance vectors",
+          "Extracting top predicted class probabilities in machine learning classifiers",
         ],
       },
       partB: {
-        title: 'Sorting and argsort() in Action',
-        concept: 'Parallel array sorting with argsort',
+        title: "Sorting Values and Extracting Rank Indices",
+        concept: "Using np.sort, descending order [::-1], argsort, argmax, and argmin",
         code: `import numpy as np
 
 scores = np.array([30, 95, 12, 80])
@@ -2569,8 +2532,7 @@ print("Ranked players:", players[sorted_indices])`,
         output: `Sorted indices: [2 0 3 1]
 Sorted scores: [12 30 80 95]
 Ranked players: ['Goblin' 'Hero' 'Ronin' 'Aria']`,
-        breakdown:
-          '- Index 2 (12) is smallest, index 1 (95) is largest.\n- `players[sorted_indices]` ranks the player names according to score!',
+        breakdown: "• 'np.sort([30, 10, 20])' yields [10, 20, 30].\n• 'np.argsort([30, 10, 20])' returns [1, 2, 0] (indices of ascending values).\n• 'np.argmax(arr)' returns the index of the largest number.\n• 'np.argmin([40, 10, 30])' returns index 1 (where 10 is located).",
       },
     },
     miniPractice: {
@@ -2641,21 +2603,20 @@ Ranked players: ['Goblin' 'Hero' 'Ronin' 'Aria']`,
     ],
     theory: {
       partA: {
-        title: 'Shared Memory Views vs Independent Copies',
-        concept: 'View memory aliasing, .base attribute & reshape() views',
-        explanation:
-          'In NumPy, basic slicing produces a VIEW: modifying elements in the slice modifies the original array! If you want an independent duplicate, you must explicitly call `arr.copy()`. An array has `.base` pointing to the parent array if it is a view; if it owns its memory, `.base` is None. Crucially, operations like `reshape()` also create a VIEW whenever memory is contiguous (meaning reshaping does not allocate new memory; mutating a reshaped array mutates the original!). Only when data is non-contiguous does reshape allocate a copy.',
-        whyUseIt:
-          'Understanding views prevents catastrophic accidental data corruption bugs where mutating a sub-slice or reshaped array ruins your original dataset.',
+        title: "Shared Memory Views vs Independent Copies",
+        concept: "Memory architecture: Shared views vs independent copies, and arr.base verification",
+        simpleAnalogy: "A View is looking at yourself in a mirror: if you paint your nose red, the reflection has a red nose too because you share the same reality. A Copy is taking a printed photograph: drawing on the photograph has zero effect on your real face!",
+        explanation: "• Slicing (arr[0:2]) creates a VIEW: it points to the exact same memory buffer as the original.\n• Mutating a view mutates the original array in-place (e.g. view[0] = 99 changes original[0] to 99).\n• arr.base: If an array is a view, arr.base points to the original owner; if it owns its memory, arr.base is None.\n• arr.copy(): Allocates a completely new independent buffer; modifying a copy NEVER affects the original.\n• Reshaping an array returns a view whenever memory is contiguous.",
+        whyUseIt: "Prevents subtle data corruption bugs while maximizing performance by avoiding unnecessary memory duplication.",
         useCases: [
-          'Ensuring training data remains pristine by creating deep copies before augmentation',
-          'Inspecting `.base` to verify if a reshaped array shares memory',
-          'Fast zero-copy reshaping of multi-dimensional images',
+          "Creating safe snapshot copies of game state before simulation steps",
+          "Modifying cropped image previews without corrupting raw photographic data",
+          "Inspecting memory ownership in high-throughput data processing pipelines",
         ],
       },
       partB: {
-        title: 'Mutation Demonstration: View vs Copy & Reshape Views',
-        concept: 'Accidental mutation, base inspection & reshape view behavior',
+        title: "Inspecting Memory Sharing and Mutation Safety",
+        concept: "Shared buffer views, arr.base ownership checks, and copy() safety",
         code: `import numpy as np
 
 orig = np.array([1, 2, 3, 4])
@@ -2676,8 +2637,7 @@ print("Original after copy mutation:", orig) # [99 2 3 4] (untouched!)`,
         output: `Original after view mutation: [99  2  3  4]
 Is reshape a view (base is not None)? True
 Original after copy mutation: [99  2  3  4]`,
-        breakdown:
-          '- Modifying `view_arr` directly changed `orig`.\n- `reshape()` creates a VIEW whenever possible, sharing memory with the parent (`base is not None`).\n- `copy_arr.copy()` allocates independent memory, protecting `orig`.',
+        breakdown: "• Mutating a slice view 'view_arr[0] = 99' updates the original array element to 99.\n• 'arr.base is not None' confirms the array is a view sharing another array's memory.\n• For an original array created directly, 'arr.base' is None.\n• 'arr.copy()' creates a dedicated buffer with no memory sharing.",
       },
     },
     miniPractice: {
@@ -2744,20 +2704,20 @@ Original after copy mutation: [99  2  3  4]`,
     ],
     theory: {
       partA: {
-        title: 'Axis Inversion Mechanics',
-        concept: 'arr.T and multidimensional permutation',
-        explanation:
-          'Transposing an array swaps its axes. For a 2D matrix, `arr.T` flips rows into columns (shape (M, N) becomes (N, M)). For 3D+ tensors, `np.transpose(arr, axes)` allows arbitrary permutation of dimensions.',
-        whyUseIt:
-          'Crucial before matrix multiplications (where inner dimensions must match) and converting image layouts between (Channels, Height, Width) and (Height, Width, Channels).',
+        title: "Axis Inversion Mechanics",
+        concept: "Matrix transposition: arr.T, (arr.T).T, and np.transpose() for higher dimensions",
+        simpleAnalogy: "Transposing is like turning a spreadsheet or photo 90 degrees: what used to be rows reading downward now become columns reading across. In 3D space, it allows swapping any pair of spatial axes.",
+        explanation: "• arr.T: Transposes a 2D matrix by swapping rows and columns (shape (M, N) becomes (N, M)).\n• Element (0, 0) remains unchanged at coordinate (0, 0).\n• Double transposition restores the original matrix: (arr.T).T == arr.\n• arr.T creates a zero-copy VIEW by swapping internal memory strides; it never copies raw data.\n• Higher dimensions: np.transpose(arr, axes) permutes axes (e.g. (2, 3, 4) with (1, 2, 0) becomes (3, 4, 2)).",
+        whyUseIt: "Aligns matrix dimensions for matrix multiplication (@) and swaps image channel layouts (e.g. PyTorch channels-first vs TensorFlow channels-last).",
         useCases: [
-          'Linear algebra matrix multiplication: `A @ B.T`',
-          'Converting PyTorch image tensors (C, H, W) to matplotlib format (H, W, C)',
+          "Converting image tensors between (Height, Width, Channels) and (Channels, Height, Width)",
+          "Transposing feature matrices for linear regression closed-form equations (X.T @ X)",
+          "Rotating 2D spatial coordinate grids",
         ],
       },
       partB: {
-        title: 'Transposition Examples',
-        concept: '2D and 3D transpose',
+        title: "Flipping Axes with arr.T and np.transpose()",
+        concept: "Swapping dimensions without memory copies, double inversion, and multi-axis permutation",
         code: `import numpy as np
 
 matrix = np.array([
@@ -2774,8 +2734,7 @@ Transposed (arr.T):
  [2 5]
  [3 6]]
 Transposed shape: (3, 2)`,
-        breakdown:
-          '- Rows become columns: row [1, 2, 3] becomes column 0.',
+        breakdown: "• For shape (3, 7), 'arr.T' produces shape (7, 3).\n• Element (0, 0) remains identical between arr and arr.T.\n• '(arr.T).T' reproduces the original matrix arr.\n• 'np.transpose(arr, (1, 2, 0))' permutes a 3D tensor from (2, 3, 4) to (3, 4, 2).",
       },
     },
     miniPractice: {
@@ -2842,21 +2801,20 @@ Transposed shape: (3, 2)`,
     ],
     theory: {
       partA: {
-        title: 'Stripping Redundant Dimensions & Advanced Unrolling',
-        concept: 'np.squeeze, flatten() vs ravel() & -1 dimension inference',
-        explanation:
-          'Three vital advanced reshaping techniques:\n1. `np.squeeze(arr)` removes all length-1 dimensions (e.g. shape (1, 4, 5) squeezed along `axis=0` becomes `(4, 5)`).\n2. `-1` Dimension Inference: In `reshape(-1, 2)` or `reshape(2, -1)`, passing `-1` instructs NumPy to automatically calculate that dimension from the total array size (e.g. 10 elements reshaped to `(-1, 2)` creates shape `(5, 2)`).\n3. `flatten()` vs `ravel()`: Both convert multi-dimensional arrays into a 1D sequence. But `arr.flatten()` ALWAYS returns an independent copy in new memory, whereas `arr.ravel()` returns a memory-efficient VIEW whenever contiguous.',
-        whyUseIt:
-          'Prepares multi-dimensional model outputs for classification heads, saves memory during flattening, and simplifies tensor reshaping.',
+        title: "Stripping Redundant Dimensions & Advanced Unrolling",
+        concept: "Dimension stripping: np.squeeze(), specific axis stripping, and flatten() vs ravel()",
+        simpleAnalogy: "Imagine an empty shipping box that contains 1 shirt packaged inside an extra plastic sleeve inside another cardboard envelope: shape (1, 5, 1). np.squeeze strips away the redundant empty packaging, leaving just the 5 items in a clean 1D line!",
+        explanation: "• np.squeeze(arr): Removes all single-dimensional entries (dimensions of size 1) from the shape.\n• Shape (1, 5, 1) squeezes down to 1D shape (5,).\n• np.squeeze(arr, axis=0) removes only the specified axis if its length is 1 (e.g. (1, 4, 5) becomes (4, 5)).\n• arr.flatten(): Always allocates and returns a 1D copy.\n• arr.ravel(): Returns a fast 1D view whenever contiguous, saving memory.\n• arr.reshape(-1, 2) on 10 elements automatically calculates 5 rows: shape (5, 2).",
+        whyUseIt: "Cleans up singleton dimensions produced by machine learning model outputs, slices, and expand_dims.",
         useCases: [
-          'Cleaning batch outputs: squeezing shape (1, 4, 5) to (4, 5)',
-          'Auto-inferring batch sizes with `arr.reshape(-1, 2)`',
-          'Flattening images for linear classifiers using zero-copy `ravel()`',
+          "Converting single-channel batch outputs from neural nets back into 1D audio or 2D images",
+          "Stripping dummy batch dimensions (1, 28, 28) into (28, 28) before rendering",
+          "Unrolling multi-dimensional matrices to compute 1D signal autocorrelations",
         ],
       },
       partB: {
-        title: 'squeeze, -1 Reshape, and flatten vs ravel',
-        concept: 'squeeze(axis=0), -1 inference, and ravel view indexing',
+        title: "Squeezing Singleton Axes and Flattening to 1D",
+        concept: "Using np.squeeze(), axis targeting, ravel() vs flatten(), and -1 inference",
         code: `import numpy as np
 
 # 1. np.squeeze with specific axis
@@ -2876,8 +2834,7 @@ print("ravel() shares memory with mat?", mat.ravel().base is not None)`,
 -1 Reshape shape (10 // 2): (5, 2)
 ravel() 1D view first element: 9
 ravel() shares memory with mat? True`,
-        breakdown:
-          '- `np.squeeze(arr, axis=0)` on (1, 4, 5) strips the first axis, producing (4, 5).\n- `reshape(-1, 2)` automatically divides 10 elements into 5 rows of 2 columns: shape (5, 2).\n- `arr.flatten()` creates a copy; `arr.ravel()` creates a view when contiguous.\n- `mat.ravel()[0]` accesses the first flattened element (9).',
+        breakdown: "• 'np.squeeze()' reduces shape (1, 5, 1) to (5,).\n• 'np.squeeze(arr, axis=0)' on shape (1, 4, 5) produces (4, 5).\n• 'flatten()' always returns a fresh copy; 'ravel()' returns a view when memory is contiguous.\n• 'ravel()[0]' accesses the first element of the flattened view.",
       },
     },
     miniPractice: {
@@ -2948,21 +2905,20 @@ ravel() shares memory with mat? True`,
     ],
     theory: {
       partA: {
-        title: 'Modern NumPy Random API',
-        concept: 'default_rng, distributions, and shape parameter size',
-        explanation:
-          'Since NumPy 1.17, `default_rng()` is the official, superior random generator utilizing the PCG64 algorithm. Key methods include: `rng.integers(low, high, size)` (uniform random integers), `rng.random(size)` (floats in [0.0, 1.0)), and `rng.normal(loc, scale, size)` (Gaussian bell curve with mean `loc` and std dev `scale`). In all random generators, specifying `size=(rows, cols)` (such as `size=(4, 5)`) dictates the exact multi-dimensional shape of the generated array.',
-        whyUseIt:
-          'Essential for scientific reproducibility, weight initialization in AI, and stochastic simulations.',
+        title: "Modern NumPy Random API",
+        concept: "Modern random API: np.random.default_rng(seed), integers, random, and normal",
+        simpleAnalogy: "Generating random numbers is like having a digital roulette wheel: you can roll whole numbers (like rolling dice), uniform percentages between 0% and 100%, or bell-curve test scores. Setting a seed is like recording the exact sequence so anyone can replay the same rolls!",
+        explanation: "• Modern NumPy standard: Always use rng = np.random.default_rng(seed) (avoids legacy state issues).\n• rng.integers(low, high): Generates random integers where high is EXCLUSIVE by default (integers(1, 7) samples 1 to 6 inclusive, like a 6-sided die).\n• rng.random(size): Generates random floats in the half-open interval [0.0, 1.0).\n• rng.normal(loc=mean, scale=std, size): Generates numbers from a Gaussian bell curve.\n• Passing an integer seed (e.g. default_rng(42)) guarantees 100% reproducible results for scientific testing.",
+        whyUseIt: "Drives procedural content generation, stochastic simulations, game mechanics, and neural net weight initialization.",
         useCases: [
-          'Initializing neural network weights from Gaussian normal distribution: `rng.normal(0, 1, size=(4, 5))`',
-          'Simulating dice, games, and probabilistic Monte Carlo risk models',
-          'Generating reproducible synthetic test datasets',
+          "Simulating dice rolls, critical hit chances, and enemy spawn locations in video games",
+          "Initializing weights and biases in deep neural networks",
+          "Generating reproducible synthetic test datasets for data validation",
         ],
       },
       partB: {
-        title: 'Using default_rng in Practice',
-        concept: 'Generating integers, floats, and normal distribution arrays with shapes',
+        title: "Generating Pseudo-Random Numbers with default_rng()",
+        concept: "Setting seeds, sampling integers, uniform floats, and Gaussian normal distributions",
         code: `import numpy as np
 
 # Initialize with seed for reproducibility
@@ -2977,8 +2933,7 @@ gaussian_mat = rng.normal(loc=0.0, scale=1.0, size=(4, 5))
 print("Gaussian array shape:", gaussian_mat.shape)`,
         output: `Random integers (1-10): [ 1  8  7  7]
 Gaussian array shape: (4, 5)`,
-        breakdown:
-          '- `seed=42` guarantees the exact same random sequence every single run.\n- `rng.integers(1, 11)` includes 1 up to 10.\n- `rng.normal(loc=0.0, scale=1.0, size=(4, 5))` produces an array of shape (4, 5).',
+        breakdown: "• 'rng = np.random.default_rng(42)' establishes a reproducible random generator.\n• 'rng.integers(1, 7)' generates numbers from 1 through 6 inclusive (7 is excluded).\n• 'rng.random()' produces floats in [0.0, 1.0).\n• 'rng.normal(loc=0.0, scale=1.0, size=(4, 5))' produces a 4x5 Gaussian matrix.",
       },
     },
     miniPractice: {
@@ -3046,20 +3001,20 @@ Gaussian array shape: (4, 5)`,
     ],
     theory: {
       partA: {
-        title: 'Shuffling and Random Sampling',
-        concept: 'Permutation and choice selection',
-        explanation:
-          '`rng.shuffle(arr)` modifies an array in-place by randomly permuting along its first axis. `rng.choice(a, size, replace)` selects random samples from an array, allowing sampling with replacement (bootstrap) or without replacement (lottery).',
-        whyUseIt:
-          'Crucial for shuffling dataset rows before training epochs and conducting Monte Carlo simulations.',
+        title: "Shuffling and Random Sampling",
+        concept: "Random data manipulation: rng.shuffle vs rng.permutation, choice sampling, and Monte Carlo",
+        simpleAnalogy: "Imagine shuffling a deck of cards: rng.shuffle mixes the physical deck in your hands (in-place). rng.permutation photocopies the deck into a new shuffled deck while keeping your original deck in order. A Monte Carlo simulation deals that deck 10,000 times to calculate your true odds of winning!",
+        explanation: "• rng.shuffle(arr): Modifies the array IN-PLACE, randomly permuting its contents (returns None).\n• rng.permutation(arr): Leaves the original array untouched and returns a NEW shuffled copy.\n• rng.choice(arr, size, replace=False): Selects random samples without replacement (guarantees no duplicates).\n• rng.standard_normal(size): Draws samples from standard normal distribution (mean=0, std=1); expected mean is ~0.0.\n• Simulating coin flips: rng.integers(0, 2, size=1000) simulates 1,000 flips where 1 is Heads and 0 is Tails.",
+        whyUseIt: "Executes randomized algorithms, bootstrapped statistical testing, and Monte Carlo probability modeling.",
         useCases: [
-          'Shuffling training batches in machine learning',
-          'Simulating thousands of coin flips or dice rolls for probability modeling',
+          "Shuffling card decks and training batches in machine learning algorithms",
+          "Drawing winning raffle tickets without replacement (replace=False)",
+          "Estimating financial portfolio value-at-risk through 10,000 simulated market scenarios",
         ],
       },
       partB: {
-        title: 'Simulating Dice Rolls in Practice',
-        concept: 'Monte Carlo dice simulation',
+        title: "Shuffling, Sampling Without Replacement, and Simulation",
+        concept: "Contrasting shuffle() vs permutation(), sampling with choice(), and Monte Carlo flips",
         code: `import numpy as np
 
 rng = np.random.default_rng(seed=10)
@@ -3073,8 +3028,7 @@ totals = die1 + die2
 prob_seven = (totals == 7).mean()
 print("Probability of rolling 7:", np.round(prob_seven, 3))`,
         output: `Probability of rolling 7: 0.168`,
-        breakdown:
-          '- Theoretical probability of rolling 7 is 6/36 ≈ 0.167.\n- The 1,000-roll simulation yields 0.168, demonstrating the Law of Large Numbers.',
+        breakdown: "• 'rng.shuffle(arr)' alters arr in-place; 'rng.permutation(arr)' returns a new shuffled copy.\n• 'rng.choice(arr, size=2, replace=False)' guarantees selected items contain no duplicates.\n• 'rng.integers(0, 2, size=1000)' models 1,000 coin tosses (0=Tails, 1=Heads).\n• Samples from 'rng.standard_normal(1000000)' have a sample mean of approximately 0.0.",
       },
     },
     miniPractice: {
@@ -3145,21 +3099,20 @@ print("Probability of rolling 7:", np.round(prob_seven, 3))`,
     ],
     theory: {
       partA: {
-        title: 'Hadamard Product vs Matrix Multiplication',
-        concept: '* vs @ and Matrix Dimension Rules',
-        explanation:
-          '`A * B` multiplies matching elements (Hadamard product). `A @ B` (or `np.matmul(A, B)`) calculates true matrix multiplication, where row vectors of A dot-multiply column vectors of B.\n\nInner Dimension Rule: For `A @ B` to be valid, the inner dimensions MUST match: `(M, K) @ (K, N) -> (M, N)`. For example, `(2, 3) @ (3, 4)` produces shape `(2, 4)`. If inner dimensions do not match (e.g. `(2, 5) @ (4, 2)` where 5 != 4), a ValueError is raised!\n\nIdentity Property: Multiplying any matrix by the identity matrix `np.eye(N)` using `@` returns the exact same matrix (`A @ np.eye(N) == A`).',
-        whyUseIt:
-          'Matrix multiplication is the universal fundamental mathematical operation of artificial neural networks, 3D graphics rendering, and physics simulations.',
+        title: "Hadamard Product vs Matrix Multiplication",
+        concept: "Linear algebra foundation: Element-wise (*) vs Matrix multiplication (@ / np.matmul)",
+        simpleAnalogy: "Multiplying numbers element-by-element (*) is like two parallel rows of dancers each holding hands with the partner across from them. Matrix multiplication (@) is a ballroom dance where each row travels across every column, multiplying and summing their products into an entirely new transformation matrix.",
+        explanation: "• A * B: Performs element-wise multiplication (requires matching shapes or broadcasting).\n• A @ B (or np.matmul(A, B)): Performs true linear algebraic matrix multiplication.\n• Dimension rule for @: Matrix A of shape (M, K) can ONLY multiply Matrix B of shape (K, N) — inner dimensions K must match!\n• Resulting shape is always (M, N) (outer dimensions).\n• Multiplying by identity matrix: A @ np.eye(N) leaves matrix A completely unchanged.",
+        whyUseIt: "Serves as the foundational mathematical engine behind 3D computer graphics rotations and deep learning neural network layers.",
         useCases: [
-          'Linear neural network forward pass: `Output = X @ W + bias` where X is (Batch, In) and W is (In, Out)',
-          'Multiplying by identity matrix: `A @ np.eye(2)`',
-          '3D rotational coordinate transformations',
+          "Transforming 3D object vertices through rotation and translation matrices in gaming",
+          "Computing dense forward-pass layers in artificial neural networks (X @ W + b)",
+          "Solving economic input-output models and graph adjacency matrices",
         ],
       },
       partB: {
-        title: 'Comparing * and @ & Dimension Matching',
-        concept: 'Output differences, shape rules, and identity matrices',
+        title: "Comparing Element-Wise (*) and Matrix Multiplication (@)",
+        concept: "Inner dimension matching (M, K) @ (K, N), identity preservation, and np.matmul",
         code: `import numpy as np
 
 A = np.array([[1, 2], [3, 4]])
@@ -3183,8 +3136,7 @@ A @ np.eye(2):
  [[1. 2.]
  [3. 4.]]
 (2, 3) @ (3, 4) result shape: (2, 4)`,
-        breakdown:
-          '- `*` is element-wise; `@` is matrix multiplication.\n- Dimension rule: `(M, K) @ (K, N)` produces shape `(M, N)`. Inner dimensions K must match!\n- `A @ np.eye(2)` preserves matrix A unaltered.',
+        breakdown: "• 'A * B' multiplies corresponding slots; 'A @ B' computes matrix inner products.\n• Shape (2, 3) @ (3, 4) matches on inner dimension 3, producing shape (2, 4).\n• Shape (2, 5) @ (4, 2) raises a ValueError because inner dimensions 5 and 4 do not match.\n• 'A @ np.eye(2)' preserves matrix A unaltered; 'np.matmul([[1, 0], [0, 1]], [3, 4])' yields [3, 4].",
       },
     },
     miniPractice: {
@@ -3251,21 +3203,20 @@ A @ np.eye(2):
     ],
     theory: {
       partA: {
-        title: 'Dot Product Mechanics & Outer Products',
-        concept: 'Inner product, cosine similarity, and np.outer shape',
-        explanation:
-          'For two 1D vectors of equal length, the inner dot product (`np.dot(a, b)`) is the sum of their element-wise products: `sum(a * b)`. If orthogonal, their dot product is 0.\n\nConversely, the outer product (`np.outer(u, v)`) computes every pair product: for vector `u` of length M and vector `v` of length N, `np.outer(u, v)` produces a 2D matrix of shape `(M, N)`. For example, `np.outer([1, 2], [3, 4, 5])` has shape `(2, 3)`.',
-        whyUseIt:
-          'Fundamental for calculating cosine similarity, measuring vector alignment, projection, and constructing covariance matrices.',
+        title: "Dot Product Mechanics & Outer Products",
+        concept: "Dot and outer products: np.dot(), orthogonal vectors (dot=0), scalar dot, and np.outer()",
+        simpleAnalogy: "If you buy 3 apples at $2 each and 4 bananas at $1 each, the dot product computes the total cash spent: (3*2) + (4*1) = $10. In geometry, if two arrows point at a 90-degree right angle (orthogonal), their dot product is exactly 0!",
+        explanation: "• np.dot(a, b): For 1D vectors, computes the inner scalar dot product: sum(a * b).\n• Orthogonal vectors: Vectors pointing at 90 degrees (e.g. [1, 0] and [0, 1]) have a dot product of exactly 0.\n• Scalar dot product: np.dot(scalar, vector) multiplies every element (np.dot(5, [2, 3]) evaluates to [10, 15]).\n• np.outer(a, b): Computes the outer product: length M vector and length N vector produce an (M, N) matrix.\n• np.vdot(a, b): Dedicated vector dot product that flattens arrays and takes the complex conjugate of the first argument.",
+        whyUseIt: "Calculates projections, cosine similarity in search engines, and spatial orientations in 3D lighting engines.",
         useCases: [
-          'Cosine similarity in natural language processing (text embeddings)',
-          'Outer product matrix generation: `np.outer(u, v)` with shape `(len(u), len(v))`',
-          'Lighting and specular reflection in 3D game engines',
+          "Calculating surface reflection angles in 3D video game lighting shaders",
+          "Computing cosine similarity between text embedding vectors in AI search",
+          "Computing total portfolio revenue from unit sales and price vectors",
         ],
       },
       partB: {
-        title: 'Computing Dot and Outer Products',
-        concept: '1D inner dot product vs 2D outer product matrix',
+        title: "Inner Dot Products and Outer Matrix Construction",
+        concept: "Computing np.dot(), orthogonal tests, scalar scaling, and np.outer() grids",
         code: `import numpy as np
 
 a = np.array([1, 2, 3])
@@ -3282,8 +3233,7 @@ outer_mat = np.outer(u, v)
 print("Outer product shape (2, 3):\n", outer_mat.shape)`,
         output: `Dot product a · b: 32
 Outer product shape (2, 3): (2, 3)`,
-        breakdown:
-          '- `np.dot(a, b)`: 1*4 + 2*5 + 3*6 = 32.\n- `np.outer(u, v)` with lengths 2 and 3 generates a matrix of shape (2, 3).',
+        breakdown: "• 'np.dot([1, 2, 3], [4, 5, 6])' calculates (1*4) + (2*5) + (3*6) = 4 + 10 + 18 = 32.\n• Orthogonal vectors [1, 0] and [0, 1] produce a dot product of 0.\n• 'np.dot(5, [2, 3])' scales to [10, 15].\n• 'np.outer([1, 2], [3, 4, 5])' produces shape (2, 3) with all pairwise products.",
       },
     },
     miniPractice: {
@@ -3350,21 +3300,20 @@ Outer product shape (2, 3): (2, 3)`,
     ],
     theory: {
       partA: {
-        title: 'Advanced Matrix Algebra via np.linalg',
-        concept: 'det, inv, solve, eig, and identity determinant',
-        explanation:
-          '`np.linalg` provides optimized LAPACK linear algebra routines: `np.linalg.det(A)` computes matrix determinants; `np.linalg.inv(A)` computes matrix inverses (for non-singular matrices where det != 0); `np.linalg.solve(A, b)` solves linear equations `Ax = b`; and `np.linalg.eig(A)` extracts eigenvalues and eigenvectors.\n\nIdentity Matrix Determinant: The determinant of an identity matrix of any dimension, e.g. `np.linalg.det(np.eye(4))`, is always exactly `1.0`.',
-        whyUseIt:
-          'Solves physics differential equations, Principal Component Analysis (PCA) dimensionality reduction, and linear regressions.',
+        title: "Advanced Matrix Algebra via np.linalg",
+        concept: "Advanced linear algebra: np.linalg submodule, solve(Ax=b), det, inv, and norm",
+        simpleAnalogy: "Linear algebra is the ultimate mathematical master key: instead of guessing unknown variables in a complex system of equations, np.linalg solves all variables simultaneously in a fraction of a millisecond.",
+        explanation: "• np.linalg: Dedicated submodule for determinants, inversions, norms, and system solvers.\n• np.linalg.solve(A, b): Directly solves the matrix linear equation Ax = b for vector x.\n• np.linalg.det(A): Computes matrix determinant (det of identity matrix np.eye(N) is always 1.0).\n• Singular matrices: When det(A) == 0, matrix A has no inverse (singular matrix) and cannot be inverted.\n• np.linalg.norm(v): Computes vector Euclidean length/magnitude (e.g. norm([3, 4]) is sqrt(3^2 + 4^2) = 5.0).",
+        whyUseIt: "Solves simultaneous equations in physics engines, electrical circuits, and aerospace navigation systems.",
         useCases: [
-          'PCA dimensionality reduction using eigenvectors of covariance matrices',
-          'Determinant calculation and verifying det(np.eye(N)) == 1.0',
-          'Solving circuit loop currents and structural beam load balances',
+          "Calculating GPS satellite position triangulation from distance signals",
+          "Simulating structural stresses and forces in mechanical engineering",
+          "Solving linear regression coefficients analytically via normal equations",
         ],
       },
       partB: {
-        title: 'Solving a Linear System: Ax = b',
-        concept: 'np.linalg.solve and identity determinant',
+        title: "Solving Linear Systems with np.linalg",
+        concept: "Using np.linalg.solve, det(), inv(), and computing vector norm()",
         code: `import numpy as np
 
 # System:
@@ -3383,8 +3332,7 @@ print("det(np.eye(4)):", np.linalg.det(np.eye(4)))`,
         output: `Solution [x, y]: [2. 3.]
 Determinant of A: 5.0
 det(np.eye(4)): 1.0`,
-        breakdown:
-          '- Solution: x = 2.0, y = 3.0.\n- Determinant is 3*2 - 1*1 = 5.0, confirming matrix is non-singular.\n- The determinant of the identity matrix np.eye(N) is always 1.0.',
+        breakdown: "• 'np.linalg.solve(A, b)' computes exact solution vector x for Ax = b.\n• 'np.linalg.det(np.eye(4))' evaluates to 1.0.\n• When determinant is 0, the matrix is singular and has no inverse.\n• 'np.linalg.norm(np.array([3, 4]))' calculates Euclidean length: 5.0.",
       },
     },
     miniPractice: {
@@ -3455,20 +3403,20 @@ det(np.eye(4)): 1.0`,
     ],
     theory: {
       partA: {
-        title: 'The Nature of NaN (Not a Number)',
-        concept: 'IEEE 754 NaN propagation and nan-safe functions',
-        explanation:
-          '`np.nan` represents missing or undefined floating-point numbers. Standard functions like `np.mean()` return `nan` if even a single value is missing. To safely calculate statistics while skipping NaNs, use nan-safe functions: `np.nanmean()`, `np.nanmax()`, `np.nanmin()`, and `np.nansum()`.',
-        whyUseIt:
-          'Prevents corrupted calculations in production data science pipelines with intermittent missing records.',
+        title: "The Nature of NaN (Not a Number)",
+        concept: "Missing values: np.nan, 0.0/0.0, isnan(), and NaN-safe functions (nanmean, nansum)",
+        simpleAnalogy: "Imagine an electronic weather sensor that temporarily loses signal during a thunderstorm: the recorded temperature isn't 0 degrees (which would be freezing) — it is an empty blank spot called NaN (Not a Number). Normal math fails on blanks, but NaN-safe tools ignore them cleanly.",
+        explanation: "• np.nan represents missing, undefined, or unrecorded numerical data (floating point type).\n• In floating point math, 0.0 / 0.0 evaluates to nan.\n• Contamination: Standard aggregations return nan if ANY element is nan (e.g. np.mean([10, 20, np.nan]) -> nan).\n• NaN-safe functions: np.nanmean(), np.nansum(), np.nanmax(), np.nanmin() ignore NaNs and aggregate only valid numbers.\n• np.isnan(arr): Returns a boolean mask marking True where NaNs exist.",
+        whyUseIt: "Prevents data pipelines from crashing or returning corrupted results when sensor readings drop.",
         useCases: [
-          'Calculating safe averages from weather station temperature streams with dropped packets',
-          'Medical patient metrics where certain laboratory tests were not conducted',
+          "Calculating average weather temperatures despite intermittent station sensor dropouts",
+          "Handling survey responses where optional questions were left blank",
+          "Preprocessing medical patient data with missing laboratory tests",
         ],
       },
       partB: {
-        title: 'Standard vs NaN-Safe Functions',
-        concept: 'Propagation vs safe reduction',
+        title: "Handling NaN and Utilizing NaN-Safe Functions",
+        concept: "Contrasting standard vs nan-safe functions (nanmean, nansum) and detecting isnan",
         code: `import numpy as np
 
 readings = np.array([24.5, 26.0, np.nan, 25.5])
@@ -3482,8 +3430,7 @@ print("nanmax():", np.nanmax(readings))`,
         output: `Standard mean(): nan
 nanmean(): 25.333333333333332
 nanmax(): 26.0`,
-        breakdown:
-          '- `np.mean()` is poisoned by `np.nan`.\n- `np.nanmean()` ignores the missing value and calculates (24.5+26.0+25.5)/3.',
+        breakdown: "• 'np.mean([10, 20, np.nan])' is contaminated and evaluates to nan.\n• 'np.nanmean([10, 20, np.nan])' ignores the missing value and calculates (10+20)/2 = 15.0.\n• 'np.nansum([5, np.nan, 15])' evaluates to 20.0.\n• '0.0 / 0.0' yields nan; 'np.isnan([1.0, np.nan, 3.0])' yields [False, True, False].",
       },
     },
     miniPractice: {
@@ -3550,20 +3497,20 @@ nanmax(): 26.0`,
     ],
     theory: {
       partA: {
-        title: 'Detecting and Imputing Missing Values',
-        concept: 'np.isnan and mean imputation',
-        explanation:
-          'Under the IEEE 754 standard, `NaN != NaN`. To find NaNs, you must call `np.isnan(arr)`. You can then filter them out using boolean inversion `arr[~np.isnan(arr)]` or impute them in-place: `arr[np.isnan(arr)] = replacement_value`.',
-        whyUseIt:
-          'Most machine learning algorithms cannot train on data containing NaNs; cleaning or imputing missing features is a mandatory pre-processing step.',
+        title: "Detecting and Imputing Missing Values",
+        concept: "Missing data handling: IEEE 754 nan!=nan, counting NaNs, and mean imputation",
+        simpleAnalogy: "If a mosaic artwork has a few missing tiles, you don't throw away the artwork: you find where the holes are, calculate the average tile color, and patch the missing spots so the mosaic is complete and ready for display.",
+        explanation: "• IEEE 754 standard: np.nan is NEVER equal to anything, including itself! (np.nan == np.nan evaluates to FALSE). Always use np.isnan().\n• Counting NaNs: np.isnan(arr).sum() counts how many NaN entries exist in an array.\n• Extracting valid numbers: arr[~np.isnan(arr)] extracts only valid numbers using bitwise NOT (~).\n• In-place zeroing: arr[np.isnan(arr)] = 0 replaces all NaNs with 0.\n• Mean imputation: arr[np.isnan(arr)] = np.nanmean(arr) replaces all NaNs with the average of valid entries.",
+        whyUseIt: "Restores incomplete datasets into clean, fully-populated arrays required by machine learning algorithms.",
         useCases: [
-          'Replacing missing sensor temperatures with the dataset mean or median',
-          'Filtering invalid corrupted image pixels',
+          "Imputing missing patient biometrics with demographic cohort averages",
+          "Replacing dropped audio transmission frames with interpolated signal averages",
+          "Counting missing values across database columns for quality reports",
         ],
       },
       partB: {
-        title: 'Missing Data Imputation in Practice',
-        concept: 'Mean imputation pipeline',
+        title: "Detecting and Imputing Missing Data",
+        concept: "IEEE 754 equality rules, counting NaNs with .sum(), and mean imputation",
         code: `import numpy as np
 
 data = np.array([10.0, 20.0, np.nan, 40.0])
@@ -3575,8 +3522,7 @@ safe_median = np.nanmedian(data)
 data[np.isnan(data)] = safe_median
 print("Imputed clean dataset:", data)`,
         output: `Imputed clean dataset: [10. 20. 20. 40.]`,
-        breakdown:
-          '- `np.isnan(data)` detects the NaN.\n- Replacing it with the median restores data completeness.',
+        breakdown: "• 'np.nan == np.nan' is always False by IEEE 754 specification.\n• 'np.isnan(arr).sum()' counts the total number of missing entries.\n• 'arr[~np.isnan(arr)]' extracts all non-NaN values.\n• 'arr[np.isnan(arr)] = np.nanmean(arr)' imputes missing entries with the valid sample mean.",
       },
     },
     miniPractice: {
@@ -3648,21 +3594,20 @@ print("Imputed clean dataset:", data)`,
     ],
     theory: {
       partA: {
-        title: 'End-to-End Real World Data Processing',
-        concept: 'Synthesis of multiple array concepts and dataset dimensions',
-        explanation:
-          'Real datasets are structured as 2D matrices of shape `(N, D)` where N represents samples (rows) and D represents features (columns). To inspect dataset size:\n- Number of samples (rows): `data.shape[0]` (or `len(data)`)\n- Number of features (columns): `data.shape[1]`\n\nFull pipeline workflows require slicing feature columns (`data[:, col_idx]`), handling missing sensor noise with nan-safe reductions (`np.nanmean`, `np.nanmax`), applying conditional filters, and computing aggregate metrics.',
-        whyUseIt:
-          'This is the exact skillset data scientists, ML engineers, and quantitative researchers use every single day.',
+        title: "End-to-End Real World Data Processing",
+        concept: "Real datasets: Z-score normalization, Min-Max scaling, percentiles, and sample counts",
+        simpleAnalogy: "Raw sensor data from the real world comes with varying units and ranges: temperature might be 20 to 30 degrees, while atmospheric pressure is 100,000 Pascals! Standardizing features puts all measurements onto a fair, uniform scale so models don't get misled by raw numbers.",
+        explanation: "• Number of samples: For an (N, D) dataset matrix, dataset.shape[0] gives the sample count (rows).\n• Z-score standardization: Scales data to mean 0 and std 1: (x - x.mean()) / x.std().\n• Min-Max scaling: Compresses values into the interval [0, 1]: (x - x.min()) / (x.max() - x.min()).\n• np.percentile(readings, p): Calculates the p-th percentile threshold (e.g. 95th percentile marks top 5% extreme readings).\n• np.nanmax(temps): Finds maximum value while safely ignoring missing sensor data.",
+        whyUseIt: "Prepares raw telemetry and tabular data for machine learning algorithms that require normalized features.",
         useCases: [
-          'Finding sample count `data.shape[0]` and feature count `data.shape[1]` in tabular ML datasets',
-          'Analyzing city-wide temperature anomaly trends',
-          'Computing student GPA rankings and pass percentages across hundreds of cohorts',
+          "Standardizing patient blood pressure and heart rate features before logistic regression",
+          "Scaling image pixel values from [0, 255] to [0, 1] for convolutional neural nets",
+          "Detecting 99th percentile server response latency spikes in cloud infrastructure",
         ],
       },
       partB: {
-        title: 'Weather Station Case Study',
-        concept: 'Real-world data inspection, cleaning and analytics',
+        title: "End-to-End Dataset Feature Scaling and Percentiles",
+        concept: "Implementing Z-score, Min-Max scaling, np.percentile, and sample count inspection",
         code: `import numpy as np
 
 # Columns: [Station_ID, Temp_C, Humidity_%, Rainfall_mm]
@@ -3683,8 +3628,7 @@ print("Peak Temperature Recorded:", max_temp)`,
         output: `Number of samples (rows): 4
 Number of features (columns): 4
 Peak Temperature Recorded: 32.1`,
-        breakdown:
-          '- `data.shape[0]` extracts the number of samples (rows), while `data.shape[1]` extracts the features.\n- `data[:, 1]` slices the temperature column.\n- `np.nanmax()` safely extracts the maximum valid reading despite missing station 3 data.',
+        breakdown: "• 'dataset.shape[0]' returns the row count (number of samples N).\n• '(x - x.mean()) / x.std()' scales features to zero-mean unit-variance.\n• '(x - x.min()) / (x.max() - x.min())' normalizes values into the [0, 1] range.\n• 'np.percentile(readings, 95)' computes the 95th percentile threshold.",
       },
     },
     miniPractice: {
@@ -3755,20 +3699,20 @@ Peak Temperature Recorded: 32.1`,
     ],
     theory: {
       partA: {
-        title: 'The Power of Vectorization',
-        concept: 'SIMD hardware vector units and compiled loops',
-        explanation:
-          'In standard Python, executing `for x in my_list: x * 2` requires the Python interpreter to inspect each object, unbox its value, perform type checks, and allocate a new integer object. NumPy vectorization delegates the entire loop to pre-compiled C routines that load multiple numbers into CPU SIMD (Single Instruction, Multiple Data) registers simultaneously.',
-        whyUseIt:
-          'Transforms code that would take minutes in pure Python into operations taking fractions of a second.',
+        title: "The Power of Vectorization",
+        concept: "Performance mechanics: Vectorization, SIMD registers, pre-compiled C loops, and np.vectorize()",
+        simpleAnalogy: "A Python for-loop is like an inspector who opens every box, inspects the paperwork, checks the serial number, and stamps it one by one. Vectorization is like a massive hydraulic stamping press that stamps 100,000 boxes simultaneously in a single mechanical stroke.",
+        explanation: "• Python for-loops incur severe overhead: dynamic type checking, object boxing/unboxing, and interpreter dispatch on every single iteration.\n• Vectorization shifts loops into pre-compiled C routines that execute at hardware speed.\n• SIMD (Single Instruction Multiple Data): Modern CPU registers process 4, 8, or 16 numbers in a single clock cycle.\n• np.arange(1000000) + 1 runs 10x to 50x faster than list comprehension [x + 1 for x in range(1000000)].\n• np.vectorize(func): Helper that converts a Python scalar function into an array-capable ufunc interface.",
+        whyUseIt: "Unlocks the full mathematical speed of modern multi-core CPU hardware without writing C extensions.",
         useCases: [
-          'Processing billions of scientific sensor readings in milliseconds',
-          'Real-time video frame filters at 60+ FPS in Python',
+          "Physics particle engines updating 100,000 particle positions per frame",
+          "High-frequency algorithmic trading systems processing real-time market order books",
+          "Real-time audio synthesis and spatial audio filtering",
         ],
       },
       partB: {
-        title: 'Benchmark: For-Loop vs Vectorization',
-        concept: '50x speed comparison',
+        title: "Benchmarking Vectorization Against Python Loops",
+        concept: "SIMD hardware acceleration, loop overhead elimination, and np.vectorize()",
         code: `import numpy as np
 
 arr = np.arange(1_000_000)
@@ -3777,8 +3721,7 @@ arr = np.arange(1_000_000)
 result = arr * 2
 print("Calculated 1,000,000 numbers instantly! First 3:", result[:3])`,
         output: `Calculated 1,000,000 numbers instantly! First 3: [0 2 4]`,
-        breakdown:
-          '- 1 million numbers processed in a few milliseconds without writing any explicit Python loops.',
+        breakdown: "• Vectorization delegates execution to pre-compiled C loops with hardware SIMD registers.\n• 'np.arange(1000000) + 1' executes 10x-50x faster than Python list comprehensions.\n• Python loops slow down due to interpreter type checking and boxing/unboxing.\n• 'np.vectorize(func)' wraps scalar logic into a convenient vectorized function.",
       },
     },
     miniPractice: {
@@ -3850,21 +3793,20 @@ print("Calculated 1,000,000 numbers instantly! First 3:", result[:3])`,
     ],
     theory: {
       partA: {
-        title: 'Memory Architecture: Lists vs ndarrays',
-        concept: 'Contiguous buffers, itemsize, and nbytes',
-        explanation:
-          'A Python list of integers stores an array of 8-byte pointers, where each pointer refers to a 28-byte PyObject on the heap (~36 bytes total per number!). A NumPy array stores raw numbers packed contiguously without pointer overhead.\n\nTwo essential memory attributes:\n- `arr.itemsize`: The length of each element in bytes (e.g. 8 bytes for int64/float64, 4 bytes for int32/float32).\n- `arr.nbytes`: The total memory size in bytes consumed by the array elements (`arr.size * arr.itemsize`).',
-        whyUseIt:
-          'Reduces memory footprint by 75%+ and drastically accelerates data throughput via contiguous cache lines.',
+        title: "Memory Architecture: Lists vs ndarrays",
+        concept: "Memory architecture: Pointer indirection vs contiguous raw bytes, itemsize, and cache locality",
+        simpleAnalogy: "A Python list of integers is like a Rolodex of street addresses: to read a number, the CPU must travel to that address in RAM, which causes constant memory delays. A NumPy array is an egg carton: all numbers sit contiguous side-by-side, so the CPU loads the entire carton into its ultra-fast L1 cache in a single fetch!",
+        explanation: "• Python lists store memory POINTERS to heap integer objects; NumPy stores contiguous raw numbers without pointer indirection.\n• A float64 element consumes exactly 8 bytes of raw memory (64 bits / 8).\n• CPU Cache Locality: Contiguous memory blocks load into ultra-fast L1/L2 CPU cache lines, eliminating memory cache misses.\n• arr.itemsize: Returns the memory footprint of 1 element in bytes (e.g. 8 for float64).\n• arr.nbytes: Returns total memory consumed by all elements (size * itemsize).",
+        whyUseIt: "Slashes application RAM usage by up to 80% and maximizes CPU throughput via cache line saturation.",
         useCases: [
-          'Checking individual element byte width via `arr.itemsize`',
-          'Calculating total memory consumed via `arr.nbytes` (`size * itemsize`)',
-          'Storing massive geospatial rasters and satellite imagery in RAM',
+          "Optimizing mobile applications to prevent operating system out-of-memory kills",
+          "Running machine learning inference on resource-constrained embedded edge devices",
+          "High-performance computing clusters processing multi-terabyte scientific arrays",
         ],
       },
       partB: {
-        title: 'Memory Footprint Comparison',
-        concept: 'Contiguous memory layout, itemsize and nbytes',
+        title: "Contrasting Memory Footprints and Cache Locality",
+        concept: "Pointer overhead vs contiguous raw bytes, itemsize, and nbytes calculations",
         code: `import numpy as np
 
 # NumPy contiguous array: int64 has itemsize = 8 bytes
@@ -3875,8 +3817,7 @@ print("Total bytes (nbytes = size * itemsize):", arr.nbytes) # 8,000 bytes!`,
         output: `Bytes per element (itemsize): 8
 Total elements (size): 1000
 Total bytes (nbytes = size * itemsize): 8000`,
-        breakdown:
-          '- `arr.itemsize` returns the byte size of each element (8 for int64).\n- `arr.nbytes` equals `arr.size * arr.itemsize` = 8,000 bytes, compared to ~36,000+ bytes for a Python list of 1,000 integers.',
+        breakdown: "• Python lists store heap pointers with heavy object header overhead.\n• NumPy stores raw contiguous bytes, loading into CPU L1/L2 cache lines with zero pointer indirection.\n• Each float64 consumes 8 bytes; int32 consumes 4 bytes.\n• 'arr.itemsize' reports bytes per element; 'arr.nbytes' reports total allocated memory.",
       },
     },
     miniPractice: {
@@ -3952,20 +3893,20 @@ Total bytes (nbytes = size * itemsize): 8000`,
     ],
     theory: {
       partA: {
-        title: 'Fancy Integer Array Indexing',
-        concept: 'Arbitrary index extraction and copy behavior',
-        explanation:
-          'Fancy indexing refers to passing arrays or lists of integers to target specific elements: `arr[[0, 3, 1]]`. Unlike basic slices which return memory views, fancy integer indexing ALWAYS creates and returns a brand new COPY of the data.',
-        whyUseIt:
-          'Allows reordering elements, sampling random minibatches, and indexing non-contiguous multi-dimensional coordinates.',
+        title: "Fancy Integer Array Indexing",
+        concept: "Fancy indexing: Integer array indexing, multi-axis selection, and copy allocation",
+        simpleAnalogy: "Basic slicing is like reading a contiguous chapter of a book (pages 10 to 20). Fancy indexing is having an index card with non-consecutive page numbers [42, 7, 19]: you jump directly to those specific pages and photocopy them into a brand-new booklet!",
+        explanation: "• Passing an array or list of integer indices arr[[0, 2]] extracts elements from those exact positions in that order.\n• CRITICAL DIFFERENCE: Basic slicing returns a VIEW; fancy indexing ALWAYS allocates and returns a NEW COPY!\n• Multi-axis fancy indexing: For matrix [[10, 20], [30, 40]], matrix[[0, 1], [1, 0]] pairs row 0 with col 1 (20) and row 1 with col 0 (30), returning [20, 30].\n• In-place modification: arr[[1, 3]] = 0 updates elements at indices 1 and 3 simultaneously in-place.\n• Indices can be repeated (e.g. arr[[0, 0, 1]] duplicates the first element twice).",
+        whyUseIt: "Extracts non-contiguous coordinates and reorders datasets arbitrarily in a single vectorized step.",
         useCases: [
-          'Selecting mini-batches by random index arrays in machine learning',
-          'Reordering image color channels or permutation layers',
+          "Shuffling rows according to custom permutation indices",
+          "Extracting specific landmark coordinates in computer vision facial tracking",
+          "Selecting specific non-consecutive sensor channels for time-series analysis",
         ],
       },
       partB: {
-        title: 'Fancy Indexing in Action',
-        concept: 'Extracting in custom order',
+        title: "Extracting Non-Contiguous Data with Fancy Indexing",
+        concept: "Integer array indexing, pairwise 2D coordinates, copy behavior, and in-place updates",
         code: `import numpy as np
 
 arr = np.array([10, 20, 30, 40, 50])
@@ -3979,8 +3920,7 @@ subset[0] = 999
 print("Original untouched:", arr[4])`,
         output: `Extracted subset: [50 10 30]
 Original untouched: 50`,
-        breakdown:
-          '- Indices `[4, 0, 2]` produce `[50, 10, 30]`.\n- Modifying the result leaves the original array untouched.',
+        breakdown: "• 'arr[[0, 2]]' on [10, 20, 30, 40] extracts [10, 30].\n• Fancy indexing ALWAYS allocates and returns a new copy, never a shared memory view.\n• 'matrix[[0, 1], [1, 0]]' extracts coordinates (0, 1) and (1, 0), returning [20, 30].\n• 'arr[[1, 3]] = 0' modifies the specified indices in-place.",
       },
     },
     miniPractice: {
@@ -4047,21 +3987,20 @@ Original untouched: 50`,
     ],
     theory: {
       partA: {
-        title: 'Inserting Axes for Broadcasting Compatibility',
-        concept: 'np.newaxis, np.expand_dims, and np.atleast_3d',
-        explanation:
-          'When two arrays cannot broadcast because one lacks a dimension, `np.newaxis` or `np.expand_dims(arr, axis)` inserts a new axis of length 1 without changing the total number of elements (`arr.size` remains identical):\n- `np.expand_dims(arr, axis=0)` on shape (3, 4) inserts a leading axis -> shape `(1, 3, 4)` (size 12).\n- `np.expand_dims(arr, axis=-1)` on shape (5, 6) inserts a trailing axis -> shape `(5, 6, 1)` (size 30).\n- `np.atleast_3d(arr)`: Converts inputs to arrays with at least 3 dimensions. For a 1D array like `np.array([1, 2])`, it produces shape `(1, 2, 1)`.',
-        whyUseIt:
-          'Essential before performing outer subtraction, matrix multiplications, and batch tensor operations in deep learning.',
+        title: "Inserting Axes for Broadcasting Compatibility",
+        concept: "Dimension expansion: np.newaxis, np.expand_dims(), atleast_2d(), and atleast_3d()",
+        simpleAnalogy: "Imagine a 1D strip of 3 numbers. To multiply it against a 2D matrix, you need to declare whether it stands vertically as a column or lays flat as a row. Dimension expansion inserts that missing axis of orientation without duplicating any data.",
+        explanation: "• arr[:, np.newaxis]: Inserts a new dimension of size 1, transforming a 1D array of shape (5,) into a 2D column vector of shape (5, 1).\n• arr[np.newaxis, :]: Transforms shape (5,) into a 2D row vector of shape (1, 5).\n• np.expand_dims(arr, axis=0): Inserts a singleton axis at position 0 (e.g. shape (3, 4) becomes (1, 3, 4)).\n• np.expand_dims(arr, axis=-1): Inserts a trailing dimension (e.g. shape (5, 6) becomes (5, 6, 1)).\n• np.atleast_2d(arr): Guarantees array has at least 2 dimensions (shape (3,) becomes (1, 3)).\n• np.atleast_3d(arr): Guarantees array has at least 3 dimensions (shape (2,) becomes (1, 2, 1)).",
+        whyUseIt: "Prepares tensors with required batch and channel dimensions for neural network architectures.",
         useCases: [
-          'Converting 1D audio sample into batch tensor format `(1, Samples)`',
-          'Adding channel dimensions via `np.expand_dims(image, axis=-1)` -> (H, W, 1)',
-          'Promoting vectors to 3D tensors via `np.atleast_3d(arr)` -> (1, N, 1)',
+          "Adding batch and channel dimensions to single images before feeding to PyTorch/TensorFlow (1, 1, 28, 28)",
+          "Aligning 1D vectors for outer-product matrix broadcasting",
+          "Formatting arrays for matrix multiplication pipelines",
         ],
       },
       partB: {
-        title: 'Expanding Dimensions in Practice',
-        concept: 'axis=0, axis=-1, and atleast_3d shapes',
+        title: "Inserting Singleton Dimensions for Tensor Compatibility",
+        concept: "Using np.newaxis, np.expand_dims(), atleast_2d(), and atleast_3d()",
         code: `import numpy as np
 
 arr = np.zeros((3, 4)) # size: 12
@@ -4076,8 +4015,7 @@ print("atleast_3d shape:", np.atleast_3d(v).shape) # (1, 2, 1)`,
         output: `expand_dims axis=0 shape: (1, 3, 4)
 expand_dims axis=-1 shape: (5, 6, 1)
 atleast_3d shape: (1, 2, 1)`,
-        breakdown:
-          '- `np.expand_dims(arr, axis=0)` inserts a dimension at the front, preserving total size.\n- `np.expand_dims(arr, axis=-1)` appends a trailing dimension of 1 at the end.\n- `np.atleast_3d(np.array([1, 2]))` returns shape (1, 2, 1), similar to reshape(1, -1, 1).',
+        breakdown: "• 'arr[:, np.newaxis]' transforms shape (5,) into column vector (5, 1).\n• 'np.expand_dims(arr, axis=0)' turns shape (3, 4) into (1, 3, 4).\n• 'np.expand_dims(arr, axis=-1)' on shape (5, 6) turns into (5, 6, 1).\n• 'np.atleast_2d([1, 2, 3]).shape' returns (1, 3); 'np.atleast_3d([1, 2]).shape' returns (1, 2, 1).",
       },
     },
     miniPractice: {
@@ -4144,21 +4082,20 @@ atleast_3d shape: (1, 2, 1)`,
     ],
     theory: {
       partA: {
-        title: 'Essential Mathematical Utilities',
-        concept: 'clip, unique, cumsum, and diff',
-        explanation:
-          '`np.clip(arr, a_min, a_max)` clamps elements within a specified numerical range. `np.unique(arr)` finds sorted unique elements. `np.cumsum(arr)` computes running cumulative sums. `np.diff(arr)` computes discrete differences between consecutive elements.',
-        whyUseIt:
-          'Prevents gradient explosions in neural networks (gradient clipping), extracts vocabulary tokens, and computes financial cumulative wealth.',
+        title: "Essential Mathematical Utilities",
+        concept: "Numerical utilities: np.clip, np.unique, np.cumsum, np.diff, and np.interp",
+        simpleAnalogy: "Numerical utilities are the precision Swiss Army Knife 🇨🇭 of NumPy: you can trim extreme values (clip), discover unique items (unique), track a running score accumulator (cumsum), measure step-by-step changes (diff), and estimate values between points (interp).",
+        explanation: "• np.clip(arr, min_val, max_val): Clamps values outside the interval to the boundary limits (e.g. clip([2, 7, 15], 5, 10) -> [5, 7, 10]).\n• np.unique(arr): Returns sorted unique elements with duplicates removed (e.g. unique([3, 1, 2, 3, 1]) -> [1, 2, 3]).\n• np.cumsum(arr): Calculates cumulative running sum: [1, 2, 3, 4] -> [1, 3, 6, 10].\n• np.diff(arr): Computes differences between adjacent elements: diff([1, 3, 7, 10]) -> [2, 4, 3].\n• np.interp(x, xp, fp): Performs 1D linear interpolation; np.interp(2.5, [1, 3], [10, 30]) evaluates to 25.0.",
+        whyUseIt: "Replaces dozens of lines of manual algorithmic loops with optimized, single-line C-speed operations.",
         useCases: [
-          'Gradient clipping: `np.clip(gradients, -1.0, 1.0)`',
-          'Finding distinct class labels in machine learning targets: `np.unique(labels)`',
-          'Calculating cumulative portfolio returns: `np.cumsum(returns)`',
+          "Audio and video signal clipping to prevent digital audio distortion and blown highlights",
+          "Finding unique categorical class IDs in survey and machine learning datasets",
+          "Interpolating missing sensor telemetry points between known GPS fixes",
         ],
       },
       partB: {
-        title: 'Advanced Utilities in Action',
-        concept: 'Clamping, uniqueness, and cumulative sums',
+        title: "Essential Algorithmic Utilities in Action",
+        concept: "Clamping with clip(), extracting unique sets, cumulative sum, diff(), and interpolation",
         code: `import numpy as np
 
 # 1. Clamping outliers with clip
@@ -4175,8 +4112,7 @@ print("Cumulative sum:", np.cumsum(steps))`,
         output: `Clipped [0, 10]: [ 2  8 10  0]
 Unique classes: [1 2 3]
 Cumulative sum: [ 1  3  6 10]`,
-        breakdown:
-          '- `clip` bounds numbers between 0 and 10.\n- `unique` returns sorted set `[1, 2, 3]`.\n- `cumsum` yields running totals `[1, 3, 6, 10]`.',
+        breakdown: "• 'np.clip([2, 7, 15], 5, 10)' clamps out-of-bounds numbers to boundaries: [5, 7, 10].\n• 'np.unique([3, 1, 2, 3, 1])' returns sorted unique values: [1, 2, 3].\n• 'np.cumsum([1, 2, 3, 4])' calculates running totals: [1, 3, 6, 10].\n• 'np.diff([1, 3, 7, 10])' yields consecutive differences: [2, 4, 3].\n• 'np.interp(2.5, [1, 3], [10, 30])' linearly interpolates to 25.0.",
       },
     },
     miniPractice: {
@@ -4259,21 +4195,20 @@ Cumulative sum: [ 1  3  6 10]`,
     ],
     theory: {
       partA: {
-        title: 'The Pinnacle of NumPy Mastery',
-        concept: 'Full curriculum synthesis, broadcasting sizes & linear algebra',
-        explanation:
-          'A true NumPy Master chains all foundational and advanced concepts effortlessly: pre-allocating data, slicing multidimensional windows, broadcasting matrix operations, managing missing data with nan-safe routines, and optimizing memory contiguity.\n\nKey Synthesis Reminders for the Guardian:\n- Broadcasting Size: If A has shape (4, 1) and B has shape (1, 5), `(A + B)` broadcasts to shape (4, 5), with total element count `(A + B).size` = 4 * 5 = 20.\n- Identity Determinant: `np.linalg.det(np.eye(N))` is always 1.0.',
-        whyUseIt:
-          'You are now equipped to build production machine learning systems, scientific simulations, and high-performance numerical engines in Python.',
+        title: "The Pinnacle of NumPy Mastery",
+        concept: "Grand synthesis: Reshaping, boolean filtering, broadcasting, dot products, and NaN handling",
+        simpleAnalogy: "You stand at the summit of NumPy mastery: like an architect who has mastered every tool from the foundation blueprint to the structural steel and final finishes, you now seamlessly synthesize multidimensional array creation, broadcasting, linear algebra, and data pipelines into a single master workflow.",
+        explanation: "• Reshaping & filtering: np.arange(12).reshape(3, 4) followed by grid[grid % 2 == 0].sum() sums all even values (yielding 30).\n• Cross-dimensional broadcasting: Array A (4, 1) and Array B (1, 5) broadcast to shape (4, 5); (A + B).size equals 20.\n• Linear algebra & NaN integration: np.dot([2, 3], [4, 5]) (which is 23) + np.nanmean([10, np.nan, 20]) (which is 15.0) evaluates to 38.0.\n• Normalization architecture: Normalizing an (M, N) matrix requires subtracting a mean vector of shape (N,).\n• Identity & Determinant: np.linalg.det(np.eye(4)) equals 1.0; fancy indexing arr[[0, 2]] extracts [10, 30].",
+        whyUseIt: "Demonstrates complete, end-to-end fluency across the entire Python scientific computing stack.",
         useCases: [
-          'End-to-end Machine Learning data pre-processing and feature pipelines',
-          'Broadcasting multi-dimensional tensor calculations: `(4, 1) + (1, 5) -> shape (4, 5)` with size 20',
-          'Real-time computer vision feature engineering and matrix math',
+          "Architecting state-of-the-art machine learning algorithms and neural network libraries from scratch",
+          "Processing terabyte-scale scientific astronomical, climate, and genomic datasets",
+          "Designing high-speed quantitative trading and mathematical physics simulations",
         ],
       },
       partB: {
-        title: 'The Master Pipeline',
-        concept: 'Reshape, Mask, Sum, Broadcasting & Linear Algebra Synthesis',
+        title: "The Grand Culmination Master Pipeline",
+        concept: "Synthesizing multi-dimensional broadcasting, filtering, linear algebra, and NaN handling",
         code: `import numpy as np
 
 # 1. Instantiate, reshape, and filter
@@ -4298,8 +4233,7 @@ print("Identity np.eye(4) determinant:", eye_det)`,
 Dot + NanMean: 38.0
 Broadcast size (4, 1) + (1, 5): 20
 Identity np.eye(4) determinant: 1.0`,
-        breakdown:
-          '- Full synthesis: 0+2+4+6+8+10 = 30. Dot product = 23. Nanmean = 15. Total = 38.0.\n- Broadcasting (4, 1) + (1, 5) yields shape (4, 5) with total size 20.\n- Determinant of identity matrix np.eye(4) is 1.0.',
+        breakdown: "• 'grid = np.arange(12).reshape(3, 4)' filtered by 'grid[grid % 2 == 0].sum()' produces 30.\n• Broadcasting (4, 1) with (1, 5) creates 20 elements (4 * 5 = 20).\n• 'np.dot([2, 3], [4, 5])' (23) + 'np.nanmean([10, np.nan, 20])' (15.0) produces 38.0.\n• 'np.linalg.det(np.eye(4))' produces 1.0; 'np.clip([2, 7, 15], 5, 10)' yields [5, 7, 10].",
       },
     },
     miniPractice: {

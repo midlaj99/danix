@@ -42,6 +42,7 @@ export interface LessonTheory {
     explanation: string;
     whyUseIt: string;
     useCases: string[];
+    simpleAnalogy?: string;
   };
   partB: {
     title: string;

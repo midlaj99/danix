@@ -50,9 +50,15 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   // Convert raw explanation string into crisp bullet points
   const formatBullets = (text: string): string[] => {
     if (!text) return [];
-    if (text.includes('•') || text.includes('- ')) {
+    if (text.includes('\n')) {
       return text
-        .split(/[•\n-]/)
+        .split(/\r?\n+/)
+        .map((s) => s.replace(/^[\s•\-\*]+|^\d+\.\s*/, '').trim())
+        .filter((s) => s.length > 0);
+    }
+    if (text.includes('•')) {
+      return text
+        .split('•')
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
     }
@@ -109,7 +115,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <BookOpen className="w-3 h-3" /> Concept
+              <BookOpen className="w-3 h-3" /> 1. Theory
             </button>
             <button
               onClick={() => {
@@ -122,7 +128,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Code className="w-3 h-3" /> Example
+              <Code className="w-3 h-3" /> 2. Examples
             </button>
             <button
               onClick={() => {
@@ -135,7 +141,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <CheckCircle2 className="w-3 h-3" /> Check
+              <CheckCircle2 className="w-3 h-3" /> 3. Practice
             </button>
           </div>
         </div>
@@ -145,6 +151,24 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           {/* TAB 1: BULLET POINT THEORY */}
           {activeTab === 'theory' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 animate-fadeIn">
+              {/* INTUITIVE CONCEPT & CORE MENTAL MODEL BANNER (FOR ALL AGE CATEGORIES) */}
+              {theory.partA.simpleAnalogy && (
+                <div className="md:col-span-2 bg-gradient-to-r from-amber-500/15 via-sky-500/10 to-indigo-500/15 p-2.5 rounded-xl border border-amber-500/40 flex items-start gap-2.5 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                  <div className="bg-amber-500/20 p-1.5 rounded-lg border border-amber-400/30 shrink-0 text-base">
+                    💡
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-[11px] font-rpg font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1.5">
+                      <span>CORE INTUITION & MENTAL MODEL</span>
+                      <span className="text-[9px] text-slate-400 font-sans normal-case tracking-normal">(Simple for All Ages)</span>
+                    </h4>
+                    <p className="text-xs text-amber-100/90 leading-relaxed font-medium mt-0.5">
+                      {theory.partA.simpleAnalogy}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* CARD 1: WHAT IS IT? */}
               <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-800">
                 <h3 className="text-amber-400 font-rpg font-bold text-xs mb-1.5 flex items-center gap-1.5">
@@ -233,8 +257,8 @@ export const LessonModal: React.FC<LessonModalProps> = ({
               {/* Remember Bullets */}
               <div className="bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
                 <h4 className="text-amber-300 font-rpg font-bold text-xs mb-1 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                  <span>WHAT TO REMEMBER</span>
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                  <span>HOW IT WORKS (SIMPLE BREAKDOWN)</span>
                 </h4>
                 <ul className="space-y-1 text-xs text-slate-300">
                   {breakdownBullets.map((bullet, idx) => (
@@ -312,19 +336,45 @@ export const LessonModal: React.FC<LessonModalProps> = ({
           )}
         </div>
 
-        {/* Footer Proceed Button */}
+        {/* Footer Guided Flow: Theory -> Examples -> Practice -> Battle */}
         <div className="border-t border-slate-800/80 pt-2 mt-1 flex flex-col xs:flex-row items-center justify-between gap-1.5 shrink-0">
           <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-mono text-center xs:text-left">
-            {activeTab === 'practice'
-              ? 'Ready? Proceed to earn Radoxom ammunition!'
-              : 'Review bullet points, then start questions.'}
+            {activeTab === 'theory' && 'Step 1/3: Master the core concept, then see live code.'}
+            {activeTab === 'code' && 'Step 2/3: Inspect the code execution and output breakdown.'}
+            {activeTab === 'practice' && (hasAnsweredPractice ? '🎯 Checkpoint cleared! Ready for real battle questions!' : 'Step 3/3: Test your understanding before combat!')}
           </span>
-          <button
-            onClick={handleProceed}
-            className="w-full xs:w-auto py-1.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-rpg font-black text-xs tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] active:scale-95 transition cursor-pointer"
-          >
-            <span>START QUESTIONS →</span>
-          </button>
+          <div className="flex items-center gap-2 w-full xs:w-auto">
+            {activeTab === 'theory' && (
+              <button
+                onClick={() => {
+                  SoundManager.getInstance().playUiClick();
+                  setActiveTab('code');
+                }}
+                className="w-full xs:w-auto py-1.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-slate-950 font-rpg font-black text-xs tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(56,189,248,0.4)] active:scale-95 transition cursor-pointer"
+              >
+                <span>NEXT: SEE EXAMPLES ➜</span>
+              </button>
+            )}
+            {activeTab === 'code' && (
+              <button
+                onClick={() => {
+                  SoundManager.getInstance().playUiClick();
+                  setActiveTab('practice');
+                }}
+                className="w-full xs:w-auto py-1.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-rpg font-black text-xs tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.4)] active:scale-95 transition cursor-pointer"
+              >
+                <span>NEXT: PRACTICE CHECK ➜</span>
+              </button>
+            )}
+            {activeTab === 'practice' && (
+              <button
+                onClick={handleProceed}
+                className="w-full xs:w-auto py-1.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-rpg font-black text-xs tracking-wider flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] active:scale-95 transition cursor-pointer"
+              >
+                <span>START BATTLE & REAL QUESTIONS ⚔️</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
