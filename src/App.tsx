@@ -144,10 +144,20 @@ export const App: React.FC = () => {
       SoundManager.getInstance().playMusic('LESSON');
     } else if (currentScreen === 'EXPLORATION') {
       SoundManager.getInstance().playMusic('EXPLORATION');
-    } else if (currentScreen === 'COMBAT' || currentScreen === 'REALTIME_COMBAT' || currentScreen === 'COMBAT_PREP') {
-      SoundManager.getInstance().playMusic(activeLevelConfig.id >= 8 ? 'BOSS' : 'COMBAT');
+    } else if (currentScreen === 'COMBAT_PREP') {
+      const isBoss =
+        activeLevelConfig.id >= 8 ||
+        activeLevelConfig.monster?.spriteType === 'boss' ||
+        activeLevelConfig.monster?.spriteType === 'guardian_malakor' ||
+        activeLevelConfig.monster?.spriteType === 'elite_demon';
+      SoundManager.getInstance().playMusic(isBoss ? 'VILLAIN_BOSS_INTRO' : 'VILLAIN_INTRO');
+    } else if (currentScreen === 'COMBAT' || currentScreen === 'REALTIME_COMBAT') {
+      const currentTrack = SoundManager.getInstance().getCurrentTrack();
+      if (currentTrack !== 'VILLAIN_INTRO' && currentTrack !== 'VILLAIN_BOSS_INTRO') {
+        SoundManager.getInstance().playMusic(activeLevelConfig.id >= 8 ? 'BOSS' : 'COMBAT');
+      }
     }
-  }, [currentScreen, activeLevelConfig.id]);
+  }, [currentScreen, activeLevelConfig.id, activeLevelConfig.monster?.spriteType]);
 
   const triggerAchievement = (id: string, title: string) => {
     const isNew = GameStateManager.getInstance().unlockAchievement(id);

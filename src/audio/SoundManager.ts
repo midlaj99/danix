@@ -4,6 +4,15 @@
  * Features FM synth, rhythm percussion drums (kick, snare, hat), and cinematic effects.
  */
 
+export type MusicTrack =
+  | 'MAIN_MENU'
+  | 'EXPLORATION'
+  | 'COMBAT'
+  | 'BOSS'
+  | 'LESSON'
+  | 'VILLAIN_INTRO'
+  | 'VILLAIN_BOSS_INTRO';
+
 export class SoundManager {
   private static instance: SoundManager;
   private ctx: AudioContext | null = null;
@@ -77,23 +86,46 @@ export class SoundManager {
     }
   }
 
+  public getCurrentTrack(): string | null {
+    return this.currentTrack;
+  }
+
   /* ------------------- PERCUSSION SYNTHESIZERS ------------------- */
 
-  private triggerKick(time: number) {
+  private triggerKick(time: number, isSubHeavy: boolean = false) {
     if (!this.ctx || !this.musicGain) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(140, time);
-    osc.frequency.exponentialRampToValueAtTime(32, time + 0.12);
+    const startFreq = isSubHeavy ? 150 : 135;
+    const endFreq = isSubHeavy ? 26 : 32;
+    osc.frequency.setValueAtTime(startFreq, time);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, time + (isSubHeavy ? 0.16 : 0.11));
 
-    gain.gain.setValueAtTime(0.4, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+    gain.gain.setValueAtTime(isSubHeavy ? 0.48 : 0.38, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + (isSubHeavy ? 0.18 : 0.13));
 
     osc.connect(gain);
     gain.connect(this.musicGain);
     osc.start(time);
-    osc.stop(time + 0.15);
+    osc.stop(time + (isSubHeavy ? 0.2 : 0.14));
+  }
+
+  private triggerSubStomp(time: number) {
+    if (!this.ctx || !this.musicGain) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(95, time);
+    osc.frequency.exponentialRampToValueAtTime(22, time + 0.38);
+
+    gain.gain.setValueAtTime(0.5, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.42);
+
+    osc.connect(gain);
+    gain.connect(this.musicGain);
+    osc.start(time);
+    osc.stop(time + 0.45);
   }
 
   private triggerSnare(time: number) {
@@ -135,9 +167,9 @@ export class SoundManager {
     noise.start(time);
   }
 
-  private triggerHiHat(time: number) {
+  private triggerHiHat(time: number, isTense: boolean = false) {
     if (!this.ctx || !this.musicGain) return;
-    const bufferSize = this.ctx.sampleRate * 0.04;
+    const bufferSize = this.ctx.sampleRate * (isTense ? 0.05 : 0.035);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -148,11 +180,11 @@ export class SoundManager {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(7000, time);
+    filter.frequency.setValueAtTime(isTense ? 6200 : 7500, time);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.12, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+    gain.gain.setValueAtTime(isTense ? 0.16 : 0.09, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + (isTense ? 0.045 : 0.035));
 
     noise.connect(filter);
     filter.connect(gain);
@@ -183,7 +215,13 @@ export class SoundManager {
     osc.stop(time + 1.5);
   }
 
-  public playMonsterRoar() {
+  /* ------------------- SPECIALIZED MONSTER ROARS ------------------- */
+
+  /**
+   * Savage predator beast growl (demon_beast, wolf, hellhound)
+   * Dual detuned FM sawtooth oscillators with resonant low-pass filter
+   */
+  public playBeastRoar() {
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;
     const time = this.ctx.currentTime;
@@ -196,18 +234,18 @@ export class SoundManager {
     osc1.type = 'sawtooth';
     osc2.type = 'sawtooth';
 
-    // Frequency modulation for terrifying beast growl
-    osc1.frequency.setValueAtTime(140, time);
-    osc1.frequency.linearRampToValueAtTime(65, time + 0.55);
-    osc2.frequency.setValueAtTime(148, time);
-    osc2.frequency.linearRampToValueAtTime(60, time + 0.55);
+    osc1.frequency.setValueAtTime(145, time);
+    osc1.frequency.linearRampToValueAtTime(58, time + 0.55);
+    osc2.frequency.setValueAtTime(152, time);
+    osc2.frequency.linearRampToValueAtTime(52, time + 0.55);
 
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(800, time);
-    filter.frequency.linearRampToValueAtTime(350, time + 0.55);
+    filter.frequency.setValueAtTime(850, time);
+    filter.frequency.linearRampToValueAtTime(260, time + 0.55);
+    filter.Q.setValueAtTime(4.0, time);
 
     gain.gain.setValueAtTime(0.55, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.62);
 
     osc1.connect(filter);
     osc2.connect(filter);
@@ -218,6 +256,251 @@ export class SoundManager {
     osc2.start(time);
     osc1.stop(time + 0.65);
     osc2.stop(time + 0.65);
+  }
+
+  /**
+   * Volcanic Dragon / Fire Demon Roar (fire_demon, inferno)
+   * Seismic sub-bass rumble + crackling flame breath noise sweep
+   */
+  public playDragonRoar() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    // 1. Deep sub-bass earth rumble
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'sawtooth';
+    subOsc.frequency.setValueAtTime(115, time);
+    subOsc.frequency.exponentialRampToValueAtTime(28, time + 0.85);
+
+    subGain.gain.setValueAtTime(0.6, time);
+    subGain.gain.exponentialRampToValueAtTime(0.001, time + 0.88);
+    subOsc.connect(subGain);
+    subGain.connect(this.sfxGain);
+    subOsc.start(time);
+    subOsc.stop(time + 0.9);
+
+    // 2. Crackling volcanic fire breath
+    const bufferSize = this.ctx.sampleRate * 0.75;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2600, time);
+    filter.frequency.exponentialRampToValueAtTime(380, time + 0.75);
+    filter.Q.setValueAtTime(2.5, time);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.45, time);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.75);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.sfxGain);
+    noise.start(time);
+  }
+
+  /**
+   * Supernatural banshee / winged terror screech (flying_demon, winged_beast, shadow_demon)
+   * High-pitch flutter oscillator + resonant bandpass filter
+   */
+  public playPhantomScreech() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(680, time);
+    osc.frequency.exponentialRampToValueAtTime(210, time + 0.65);
+
+    // Frequency flutter vibrato (banshee cry)
+    const vibrato = this.ctx.createOscillator();
+    const vibratoGain = this.ctx.createGain();
+    vibrato.frequency.setValueAtTime(46, time);
+    vibratoGain.gain.setValueAtTime(45, time);
+    vibrato.connect(osc.frequency);
+    vibrato.start(time);
+    vibrato.stop(time + 0.7);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1500, time);
+    filter.frequency.exponentialRampToValueAtTime(620, time + 0.65);
+    filter.Q.setValueAtTime(4.5, time);
+
+    gain.gain.setValueAtTime(0.48, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.68);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(time);
+    osc.stop(time + 0.7);
+  }
+
+  /**
+   * Crushing metallic stone golem groan (armored_demon, gargoyle, iron golem)
+   * Low grinding sawtooth wave + metallic resonant ringing plates
+   */
+  public playGolemRoar() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    // 1. Grinding tectonic rock core
+    const rockOsc = this.ctx.createOscillator();
+    const rockGain = this.ctx.createGain();
+    const rockFilter = this.ctx.createBiquadFilter();
+
+    rockOsc.type = 'sawtooth';
+    rockOsc.frequency.setValueAtTime(95, time);
+    rockOsc.frequency.linearRampToValueAtTime(36, time + 0.75);
+
+    rockFilter.type = 'lowpass';
+    rockFilter.frequency.setValueAtTime(420, time);
+    rockFilter.frequency.linearRampToValueAtTime(130, time + 0.75);
+    rockFilter.Q.setValueAtTime(3.0, time);
+
+    rockGain.gain.setValueAtTime(0.55, time);
+    rockGain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+
+    rockOsc.connect(rockFilter);
+    rockFilter.connect(rockGain);
+    rockGain.connect(this.sfxGain);
+    rockOsc.start(time);
+    rockOsc.stop(time + 0.82);
+
+    // 2. Metallic plate resonant rings
+    [680, 1140, 1850].forEach((freq, idx) => {
+      const metalOsc = this.ctx!.createOscillator();
+      const metalGain = this.ctx!.createGain();
+      metalOsc.type = 'triangle';
+      metalOsc.frequency.setValueAtTime(freq, time);
+      metalGain.gain.setValueAtTime(0.2 / (idx + 1), time);
+      metalGain.gain.exponentialRampToValueAtTime(0.001, time + 0.4 + idx * 0.1);
+
+      metalOsc.connect(metalGain);
+      metalGain.connect(this.sfxGain!);
+      metalOsc.start(time);
+      metalOsc.stop(time + 0.45 + idx * 0.1);
+    });
+  }
+
+  /**
+   * Vicious raspy goblin snarl (goblin, imp)
+   * Rapid pitch stutter with snappy bite
+   */
+  public playGoblinRoar() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+
+    osc.frequency.setValueAtTime(310, time);
+    osc.frequency.linearRampToValueAtTime(140, time + 0.15);
+    osc.frequency.linearRampToValueAtTime(220, time + 0.25);
+    osc.frequency.linearRampToValueAtTime(80, time + 0.45);
+
+    gain.gain.setValueAtTime(0.42, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.48);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(time);
+    osc.stop(time + 0.5);
+  }
+
+  /**
+   * Earth-shattering apocalyptic titan roar (elite_demon, boss, guardian_malakor)
+   * Triple layered oscillators + seismic sub-drop shockwave
+   */
+  public playTitanRoar() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    // Layer 1: Subwoofer seismic shaker
+    const sub = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    sub.type = 'triangle';
+    sub.frequency.setValueAtTime(85, time);
+    sub.frequency.exponentialRampToValueAtTime(22, time + 1.1);
+    subGain.gain.setValueAtTime(0.65, time);
+    subGain.gain.exponentialRampToValueAtTime(0.001, time + 1.15);
+    sub.connect(subGain);
+    subGain.connect(this.sfxGain);
+    sub.start(time);
+    sub.stop(time + 1.2);
+
+    // Layer 2: Apocalyptic mid growl
+    const mid = this.ctx.createOscillator();
+    const midGain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    mid.type = 'sawtooth';
+    mid.frequency.setValueAtTime(175, time);
+    mid.frequency.exponentialRampToValueAtTime(42, time + 1.0);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1100, time);
+    filter.frequency.linearRampToValueAtTime(240, time + 1.0);
+    filter.Q.setValueAtTime(4.5, time);
+
+    midGain.gain.setValueAtTime(0.55, time);
+    midGain.gain.exponentialRampToValueAtTime(0.001, time + 1.05);
+
+    mid.connect(filter);
+    filter.connect(midGain);
+    midGain.connect(this.sfxGain);
+    mid.start(time);
+    mid.stop(time + 1.1);
+
+    // Layer 3: Cinematic sub boom
+    this.playCinematicBoom();
+  }
+
+  /**
+   * Main roar dispatcher routing to specific procedural roar by monster archetype
+   */
+  public playMonsterRoar(spriteType?: string) {
+    const type = (spriteType || '').toLowerCase();
+    if (type.includes('fire') || type.includes('dragon')) {
+      this.playDragonRoar();
+    } else if (
+      type.includes('wing') ||
+      type.includes('fly') ||
+      type.includes('shadow') ||
+      type.includes('specter')
+    ) {
+      this.playPhantomScreech();
+    } else if (type.includes('armor') || type.includes('golem') || type.includes('stone')) {
+      this.playGolemRoar();
+    } else if (type.includes('goblin') || type.includes('imp')) {
+      this.playGoblinRoar();
+    } else if (
+      type.includes('boss') ||
+      type.includes('elite') ||
+      type.includes('guardian') ||
+      type.includes('malakor') ||
+      type.includes('titan')
+    ) {
+      this.playTitanRoar();
+    } else {
+      this.playBeastRoar();
+    }
   }
 
   public playUltimateBurst() {
@@ -634,7 +917,9 @@ export class SoundManager {
 
   /* ------------------- THRILLING RHYTHMIC MUSIC GENERATOR ------------------- */
 
-  public playMusic(track: 'MAIN_MENU' | 'EXPLORATION' | 'COMBAT' | 'BOSS' | 'LESSON') {
+  /* ------------------- THRILLER & VILLAIN RHYTHMIC MUSIC GENERATOR ------------------- */
+
+  public playMusic(track: MusicTrack) {
     if (this.currentTrack === track) return;
     this.stopMusic();
     this.currentTrack = track;
@@ -644,38 +929,72 @@ export class SoundManager {
     let step = 0;
     let bpm = 120;
     let progression: number[][] = [];
+    let isVillain = false;
 
-    if (track === 'MAIN_MENU' || track === 'LESSON') {
-      bpm = 96;
+    if (track === 'VILLAIN_INTRO') {
+      // 76 BPM: Heavy, sinister, dark villain march with devil's interval (tritone) and Phrygian terror
+      bpm = 76;
+      isVillain = true;
       progression = [
-        [261.63, 329.63, 392.00], // C
-        [220.00, 261.63, 329.63], // Am
-        [174.61, 220.00, 261.63], // F
-        [196.00, 246.94, 293.66], // G
+        [73.42, 103.83, 146.83],       // D2, Ab2 (Devil's Tritone!), D3
+        [77.78, 110.00, 155.56],       // Eb2, A2 (Phrygian lift), Eb3
+        [73.42, 87.31, 103.83, 146.83], // D2, F2, Ab2 (D Diminished horror), D3
+        [69.30, 98.00, 138.59],        // C#2, G2 (Leading-tone tritone tension), C#3
       ];
-    } else if (track === 'EXPLORATION') {
-      bpm = 112;
+    } else if (track === 'VILLAIN_BOSS_INTRO') {
+      // 70 BPM: Colossal apocalyptic boss doom march (titan entrance)
+      bpm = 70;
+      isVillain = true;
       progression = [
-        [220.00, 261.63, 329.63, 392.00], // Am7
-        [174.61, 220.00, 261.63, 329.63], // Fmaj7
-        [261.63, 329.63, 392.00, 493.88], // Cmaj7
-        [196.00, 246.94, 293.66, 349.23], // G7
+        [65.41, 92.50, 130.81],        // C2, F#2 (C Tritone Doom), C3
+        [61.74, 87.31, 123.47],        // B1, F2 (B Diminished), B2
+        [58.27, 82.41, 116.54],        // Bb1, E2 (Bb Diminished), Bb2
+        [55.00, 77.78, 110.00],        // A1, Eb2 (A Diminished), A2
       ];
     } else if (track === 'COMBAT') {
-      bpm = 142; // Fast, driving combat
+      // 144 BPM: Fast driving thriller synthwave combat with syncopated heartbeat kick
+      bpm = 144;
       progression = [
+        [146.83, 174.61, 220.00, 293.66], // Dm9 (D, F, A, D)
+        [155.56, 196.00, 233.08, 311.13], // Eb maj (Phrygian thriller tension shift!)
+        [146.83, 174.61, 207.65, 293.66], // D dim (Tritone dread stab)
+        [110.00, 138.59, 164.81, 220.00], // A7 (Harmonic minor thriller resolve)
+      ];
+    } else if (track === 'BOSS') {
+      // 154 BPM: Apocalyptic boss thriller battle (relentless diminished arpeggios & double-kicks)
+      bpm = 154;
+      progression = [
+        [110.00, 130.81, 155.56, 185.00], // A dim7
+        [116.54, 138.59, 164.81, 196.00], // Bb dim7
+        [103.83, 123.47, 146.83, 174.61], // Ab dim7
+        [98.00, 123.47, 146.83, 196.00],  // G / E7b9
+      ];
+    } else if (track === 'EXPLORATION') {
+      // 108 BPM: Dark mystery thriller exploration (pizzicato suspense & atmospheric minor 9ths)
+      bpm = 108;
+      progression = [
+        [220.00, 261.63, 329.63, 392.00], // Am7
+        [174.61, 220.00, 261.63, 277.18], // Fmaj7#11
         [146.83, 174.61, 220.00, 293.66], // Dm9
-        [130.81, 164.81, 196.00, 261.63], // C
+        [164.81, 207.65, 246.94, 293.66], // E7b9
+      ];
+    } else if (track === 'MAIN_MENU') {
+      // 92 BPM: Cinematic dark thriller overture with resonant sub-bass
+      bpm = 92;
+      progression = [
+        [130.81, 155.56, 196.00, 261.63], // Cm
         [116.54, 146.83, 174.61, 233.08], // Bb
-        [110.00, 138.59, 164.81, 220.00], // A
+        [103.83, 130.81, 155.56, 207.65], // Ab
+        [98.00, 123.47, 146.83, 196.00],  // G
       ];
     } else {
-      bpm = 152; // Apocalyptic Boss
+      // 96 BPM: Scholar / detective mystery (LESSON)
+      bpm = 96;
       progression = [
-        [110.00, 130.81, 164.81, 220.00], // Am
-        [103.83, 123.47, 155.56, 207.65], // Ab dim
-        [98.00, 123.47, 146.83, 196.00],  // G
-        [92.50, 116.54, 138.59, 185.00],  // F# dim
+        [196.00, 246.94, 293.66, 349.23], // G
+        [164.81, 196.00, 246.94, 329.63], // Em
+        [174.61, 220.00, 261.63, 329.63], // F
+        [146.83, 174.61, 220.00, 261.63], // Dm
       ];
     }
 
@@ -687,35 +1006,99 @@ export class SoundManager {
       const chord = progression[chordIndex];
       const note = chord[step % chord.length];
 
-      // Percussion groove during COMBAT and BOSS
-      if (track === 'COMBAT' || track === 'BOSS') {
-        const beatInMeasure = step % 8;
-        // Kick on 0, 4 and syncopated 6
-        if (beatInMeasure === 0 || beatInMeasure === 4 || beatInMeasure === 6) {
-          this.triggerKick(now);
+      // Percussion groove depending on track type
+      const beatInMeasure = step % 8;
+
+      if (isVillain) {
+        // Villain Stomp March: Heavy sub-stomp on beats 0 & 4, chain snare on 2 & 6, tense ticking hats
+        if (beatInMeasure === 0 || beatInMeasure === 4) {
+          this.triggerSubStomp(now);
+          if (track === 'VILLAIN_BOSS_INTRO') {
+            this.triggerKick(now, true);
+          }
         }
-        // Snare on 2 and 6
+        if (track === 'VILLAIN_BOSS_INTRO' && beatInMeasure === 1) {
+          this.triggerKick(now, true);
+        }
         if (beatInMeasure === 2 || beatInMeasure === 6) {
           this.triggerSnare(now);
         }
-        // Hi-hat on every step
-        this.triggerHiHat(now);
+        // Continuous clockwork ticking hat (tension builder)
+        this.triggerHiHat(now, beatInMeasure % 2 === 0);
+      } else if (track === 'COMBAT' || track === 'BOSS') {
+        // High-octane thriller syncopation:
+        // Double-kick on 0, 3, 4, 6
+        if (
+          beatInMeasure === 0 ||
+          beatInMeasure === 3 ||
+          beatInMeasure === 4 ||
+          beatInMeasure === 6 ||
+          (track === 'BOSS' && beatInMeasure === 1)
+        ) {
+          this.triggerKick(now, track === 'BOSS');
+        }
+        // Snare snaps on 2 and 6
+        if (beatInMeasure === 2 || beatInMeasure === 6) {
+          this.triggerSnare(now);
+        }
+        // Driving clockwork 16th hats
+        this.triggerHiHat(now, beatInMeasure % 2 === 0);
+      } else if (track === 'EXPLORATION') {
+        // Mystery exploration heartbeat kick
+        if (beatInMeasure === 0) {
+          this.triggerKick(now, false);
+        }
+        if (beatInMeasure === 2 || beatInMeasure === 6) {
+          this.triggerHiHat(now, false);
+        }
+      } else if (track === 'MAIN_MENU') {
+        if (beatInMeasure === 0 || beatInMeasure === 4) {
+          this.triggerKick(now, false);
+        }
+        this.triggerHiHat(now, false);
       }
 
-      // Melodic bass & arpeggio synth
+      // Melodic bass & arpeggio synthesizer
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
 
-      osc.type = (track === 'COMBAT' || track === 'BOSS') ? 'sawtooth' : 'triangle';
-      const octaveMultiplier = (step % 2 === 0) ? 1 : 2;
+      if (isVillain) {
+        // Ominous villain brass sawtooth horn
+        osc.type = 'sawtooth';
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(380, now);
+        filter.frequency.linearRampToValueAtTime(160, now + (intervalMs / 1000) * 0.85);
+        filter.Q.setValueAtTime(3.2, now);
+      } else if (track === 'COMBAT' || track === 'BOSS') {
+        // Driving aggressive synthesizer
+        osc.type = 'sawtooth';
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, now);
+        filter.frequency.linearRampToValueAtTime(450, now + (intervalMs / 1000) * 0.7);
+      } else {
+        // Atmospheric mystery triangle / sine
+        osc.type = 'triangle';
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(900, now);
+      }
+
+      // Octave jumps for rhythmic bass movement
+      const octaveMultiplier = isVillain
+        ? (step % 4 === 0 ? 0.5 : 1) // Deep sub drones for villain
+        : (track === 'COMBAT' || track === 'BOSS')
+        ? (step % 2 === 0 ? 1 : 2)
+        : (step % 2 === 0 ? 1 : 1);
+
       osc.frequency.setValueAtTime(note * octaveMultiplier, now);
 
-      const duration = intervalMs / 1000 * 0.85;
-      const synthVol = (track === 'COMBAT' || track === 'BOSS') ? 0.09 : 0.07;
+      const duration = (intervalMs / 1000) * 0.88;
+      const synthVol = isVillain ? 0.11 : (track === 'COMBAT' || track === 'BOSS') ? 0.09 : 0.07;
       gain.gain.setValueAtTime(synthVol, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-      osc.connect(gain);
+      osc.connect(filter);
+      filter.connect(gain);
       gain.connect(this.musicGain);
 
       osc.start(now);

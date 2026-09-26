@@ -365,6 +365,11 @@ export class GameEngine {
     this.cameraX = 700;
     this.onRadoxomCountChanged?.(this.radoxomsAvailable);
     this.onCombatStatsUpdated?.(this.combatStats);
+
+    // Play dedicated Villain Intro BGM as monster approaches
+    const spriteType = this.monster?.config?.spriteType;
+    const isBossOrTitan = this.levelConfig.id >= 8 || spriteType === 'boss' || spriteType === 'guardian_malakor' || spriteType === 'elite_demon';
+    SoundManager.getInstance().playMusic(isBossOrTitan ? 'VILLAIN_BOSS_INTRO' : 'VILLAIN_INTRO');
   }
 
   public fireRadoxom() {
@@ -723,7 +728,7 @@ export class GameEngine {
     this.monster.triggerTelegraph(this.hero.x, () => {
       if (this.monster && !this.monster.isDefeated) {
         this.monster.triggerAttack(this.hero.x);
-        SoundManager.getInstance().playMonsterRoar();
+        SoundManager.getInstance().playMonsterRoar(this.monster.config.spriteType);
 
         setTimeout(() => {
           // Check if Hero is currently dodging (i-frames!)
@@ -917,7 +922,7 @@ export class GameEngine {
             this.combatEntryTimer = 4.2; // 4.2s to read, immediately skippable by tap / space
 
             // Monster Roar & Boom on entrance!
-            SoundManager.getInstance().playMonsterRoar();
+            SoundManager.getInstance().playMonsterRoar(this.monster.config.spriteType);
             SoundManager.getInstance().playCinematicBoom();
             this.triggerScreenShake(0.65, 18);
 
@@ -959,6 +964,8 @@ export class GameEngine {
             );
             SoundManager.getInstance().playSwordClash();
             this.triggerScreenShake(0.35, 12);
+            // Switch from Villain Intro BGM to fast thriller combat / boss BGM
+            SoundManager.getInstance().playMusic(this.levelConfig.id >= 8 ? 'BOSS' : 'COMBAT');
           }
         }
       }
@@ -1245,7 +1252,7 @@ export class GameEngine {
         this.isCinematicIntro = true;
         this.triggerScreenShake(0.5, 14);
         SoundManager.getInstance().playCinematicBoom();
-        SoundManager.getInstance().playMonsterRoar();
+        SoundManager.getInstance().playMonsterRoar(this.monster.config.spriteType);
 
         if (this.onEncounter) {
           this.onEncounter();
