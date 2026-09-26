@@ -89,6 +89,29 @@ export class Hero {
   public speedBoostTimer: number = 0;
   public auraColor: string = '#38bdf8'; // Cyan default
 
+  // Ultimate / Finishing Skill System
+  public ultimateCharge: number = 0;
+  public readonly MAX_ULTIMATE_CHARGE: number = 100;
+  public isExecutingUltimate: boolean = false;
+  public ultimateTimer: number = 0;
+  public ultimateName: string = 'Zero-G Shatter';
+
+  public addUltimateCharge(amount: number): boolean {
+    const prev = this.ultimateCharge;
+    this.ultimateCharge = Math.min(this.MAX_ULTIMATE_CHARGE, this.ultimateCharge + amount);
+    return prev < this.MAX_ULTIMATE_CHARGE && this.ultimateCharge >= this.MAX_ULTIMATE_CHARGE;
+  }
+
+  public isUltimateReady(): boolean {
+    return this.ultimateCharge >= this.MAX_ULTIMATE_CHARGE;
+  }
+
+  public resetUltimate() {
+    this.ultimateCharge = 0;
+    this.isExecutingUltimate = false;
+    this.ultimateTimer = 0;
+  }
+
   // Physics & Movement Constants (Fast, Smooth, Crisp)
   public readonly WALK_SPEED = 190;
   public readonly RUN_SPEED = 290;
@@ -175,6 +198,21 @@ export class Hero {
     if (this.dodgeCooldown > 0) this.dodgeCooldown -= dt;
     if (this.speedBoostTimer > 0) this.speedBoostTimer -= dt;
     if (this.fireRecoilTimer > 0) this.fireRecoilTimer -= dt;
+    if (this.ultimateTimer > 0) {
+      this.ultimateTimer -= dt;
+      // High-speed ultimate phantom trail
+      this.afterimages.push({
+        x: this.x + (Math.random() - 0.5) * 16,
+        y: this.y + (Math.random() - 0.5) * 16,
+        facingRight: this.facingRight,
+        alpha: 0.85,
+        color: '#facc15',
+      });
+      if (this.ultimateTimer <= 0) {
+        this.isExecutingUltimate = false;
+        this.isInvulnerable = false;
+      }
+    }
     if (this.castTimer > 0) {
       this.castTimer -= dt;
       if (this.castTimer <= 0 && (this.state === 'radoxom_cast' || this.state === 'radoxom_release')) {
@@ -425,6 +463,7 @@ export class Hero {
     if (skillName.includes('Dimension') || skillName.includes('Cleave') || skillName.includes('Slash')) {
       this.attackStyle = 'cleave';
       this.auraColor = '#22c55e'; // Emerald
+      this.ultimateName = 'Dimensional Hyper-Cleave';
     } else if (
       skillName.includes('Fire') ||
       skillName.includes('Molten') ||
@@ -433,6 +472,7 @@ export class Hero {
     ) {
       this.attackStyle = 'fire';
       this.auraColor = '#f97316'; // Blazing Orange
+      this.ultimateName = 'Zero-G Supernova';
     } else if (
       skillName.includes('Index') ||
       skillName.includes('Pierce') ||
@@ -441,12 +481,15 @@ export class Hero {
     ) {
       this.attackStyle = 'laser';
       this.auraColor = '#c084fc'; // Neon Violet
+      this.ultimateName = 'Matrix Particle Purge';
     } else if (skillName.includes('Mastery') || skillName.includes('Sovereign')) {
       this.attackStyle = 'omnislash';
       this.auraColor = '#facc15'; // Divine Gold
+      this.ultimateName = 'Sovereign Omnislash';
     } else {
       this.attackStyle = 'slash';
       this.auraColor = '#38bdf8'; // Cyan default
+      this.ultimateName = 'Zero-G Shatter';
     }
   }
 

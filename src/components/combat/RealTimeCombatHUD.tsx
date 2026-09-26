@@ -25,6 +25,10 @@ interface RealTimeCombatHUDProps {
   monsterDefenseState?: 'NEUTRAL' | 'GUARDING' | 'ADAPTIVE' | 'ENRAGED' | 'STAGGERED';
   monsterPoise?: number;
   monsterMaxPoise?: number;
+  ultimateCharge?: number;
+  isUltimateReady?: boolean;
+  ultimateName?: string;
+  onTriggerUltimate?: () => void;
 }
 
 export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
@@ -47,6 +51,10 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
   monsterDefenseState = 'NEUTRAL',
   monsterPoise = 100,
   monsterMaxPoise = 100,
+  ultimateCharge = 0,
+  isUltimateReady = false,
+  ultimateName = 'Zero-G Shatter',
+  onTriggerUltimate,
 }) => {
   const hpRatio = Math.max(0, Math.min(1, heroStats.currentHp / heroStats.maxHp));
   const shieldRatio = Math.max(0, Math.min(1, heroStats.currentShield / heroStats.maxShield));
@@ -128,7 +136,7 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
           </div>
 
           {/* Micro Stamina Bar */}
-          <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden border border-amber-500/30">
+          <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden border border-amber-500/30 mb-1">
             <div
               className={`h-full transition-all duration-150 rounded-full ${
                 staminaRatio < 0.25 ? 'bg-rose-500' : 'bg-gradient-to-r from-amber-500 to-yellow-300'
@@ -136,6 +144,29 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
               style={{ width: `${staminaRatio * 100}%` }}
               title={`Stamina: ${Math.round(heroStamina)}/${heroMaxStamina}`}
             />
+          </div>
+
+          {/* Micro Ultimate Energy Bar */}
+          <div className="space-y-0.5 pt-0.5 border-t border-slate-800/80">
+            <div className="flex items-center justify-between text-[7px] sm:text-[8px] font-bold font-mono">
+              <span className="flex items-center gap-0.5 text-amber-400">
+                <Zap className="w-2 h-2 fill-amber-400 text-amber-400" />
+                <span>ULT</span>
+              </span>
+              <span className={isUltimateReady ? 'text-amber-300 font-black animate-pulse' : 'text-slate-400'}>
+                {isUltimateReady ? 'READY!' : `${Math.round(ultimateCharge)}%`}
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-amber-500/40">
+              <div
+                className={`h-full transition-all duration-300 rounded-full ${
+                  isUltimateReady
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 shadow-[0_0_8px_#f59e0b] animate-pulse'
+                    : 'bg-gradient-to-r from-amber-600 to-yellow-500'
+                }`}
+                style={{ width: `${Math.min(100, ultimateCharge)}%` }}
+              />
+            </div>
           </div>
         </div>
 
@@ -324,8 +355,26 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
           <span>Dodges: <strong className="text-cyan-300">{combatStats.attacksDodged}</strong></span>
           <span>•</span>
           <span>Dmg: <strong className="text-amber-300">{combatStats.damageDealt}</strong></span>
+          <span>•</span>
+          <span>Ult: <strong className="text-amber-400">{Math.round(ultimateCharge)}% [R/Q]</strong></span>
         </div>
       </div>
+
+      {/* Floating Ultimate Skill Activation Button (When 100% Charged) */}
+      {isUltimateReady && (
+        <div className="fixed bottom-14 right-3 sm:bottom-16 sm:right-6 z-50 pointer-events-auto animate-bounce">
+          <button
+            onClick={() => {
+              SoundManager.getInstance().playUiClick();
+              onTriggerUltimate?.();
+            }}
+            className="px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-rpg font-black text-xs sm:text-sm shadow-[0_0_30px_rgba(245,158,11,0.85)] border-2 border-white flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
+          >
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 fill-slate-950 text-slate-950 animate-pulse" />
+            <span className="tracking-wider">[R] {ultimateName.toUpperCase()}!</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

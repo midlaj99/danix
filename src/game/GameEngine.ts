@@ -138,7 +138,18 @@ export class GameEngine {
   public onMonsterHealthChanged: ((hp: number, maxHp: number) => void) | null = null;
   public onHeroStaminaChanged: ((stamina: number, maxStamina: number) => void) | null = null;
   public onAIDebugUpdate: ((snapshot: CombatAIDebugSnapshot | null) => void) | null = null;
+  public onUltimateChargeChanged: ((charge: number, isReady: boolean, ultimateName: string) => void) | null = null;
+  public bulletTimeTimer: number = 0;
+  public bulletTimeScale: number = 1.0;
   public showAIDebugOverlay: boolean = false;
+
+  public notifyUltimateState() {
+    this.onUltimateChargeChanged?.(
+      this.hero.ultimateCharge,
+      this.hero.isUltimateReady(),
+      this.hero.ultimateName
+    );
+  }
 
   public toggleAIDebugOverlay(): boolean {
     this.showAIDebugOverlay = !this.showAIDebugOverlay;
@@ -291,6 +302,8 @@ export class GameEngine {
     this.hazardZones = [];
     this.combatDurationTimer = 0;
     this.ammoExhaustionTimer = 0;
+    this.hero.resetUltimate();
+    this.notifyUltimateState();
 
     this.combatStats = {
       radoxomsEarned,
@@ -592,6 +605,10 @@ export class GameEngine {
           this.particles.spawnDamageText(this.monster.x + 30, this.monster.y - 15, hurtResult.feedbackText, hurtResult.isCritical, hurtResult.feedbackColor);
           this.particles.spawnSlashWave(this.hero.x + 20, this.hero.y + 10, this.hero.facingRight, this.hero.auraColor);
 
+          // Build Ultimate Charge on hit
+          this.hero.addUltimateCharge(14);
+          this.notifyUltimateState();
+
           // AoE Splash Damage to Minions on multi-monster battle
           if (this.minions.length > 0 && this.hero.attackStyle !== 'slash') {
             const splashDmg = Math.max(15, Math.round(damage * 0.65));
@@ -614,6 +631,80 @@ export class GameEngine {
     }, 240);
   }
 
+  public executeHeroUltimate() {
+    if (!this.hero.isUltimateReady() || this.hero.isExecutingUltimate || !this.monster || this.monster.isDefeated) {
+      return;
+    }
+
+    const ultName = this.hero.ultimateName;
+    this.hero.ultimateCharge = 0;
+    this.hero.isExecutingUltimate = true;
+    this.hero.ultimateTimer = 0.85;
+    this.hero.isInvulnerable = true;
+    this.notifyUltimateState();
+
+    // Sound FX: Rising laser build-up into sub-bass explosion
+    SoundManager.getInstance().playUltimateBurst();
+
+    // Cinematic slow-mo bullet-time effect
+    this.bulletTimeTimer = 0.55;
+    this.bulletTimeScale = 0.2;
+
+    // Screen Shake
+    this.triggerScreenShake(0.8, 22);
+
+    // Flashy visual effects
+    this.particles.spawnSparks(this.hero.x, this.hero.y, '#facc15', 40);
+    this.particles.spawnSlashWave(this.hero.x, this.hero.y, this.hero.facingRight, '#facc15');
+
+    // Massive In-world Announcement Banner
+    this.particles.spawnDamageText(
+      (this.hero.x + this.monster.x) / 2,
+      this.groundY - 140,
+      `★ ${ultName.toUpperCase()}! ★`,
+      true,
+      '#facc15'
+    );
+
+    // Damage & Poise break on Monster
+    const ultDamage = Math.max(90, Math.round(this.monster.maxHp * 0.42));
+    this.monster.triggerHurt(ultDamage, {
+      damage: ultDamage,
+      attackerX: this.hero.x,
+      attackerY: this.hero.y,
+      attackerVx: this.hero.vx,
+      attackerIsGrounded: true,
+      attackerIsAirborne: false,
+      attackerIsDodging: false,
+      attackerIsStatic: false,
+      isMeleeSlash: true,
+    });
+
+    // Guard break: Force stagger for 4 seconds!
+    this.monster.isStaggered = true;
+    this.monster.guardBreakTimer = 4.0;
+    this.monster.director.poise = 0;
+
+    this.particles.spawnSparks(this.monster.x + 30, this.monster.y + 30, '#f59e0b', 45);
+    this.particles.spawnDamageText(this.monster.x + 30, this.monster.y - 30, `💥 ${ultDamage} ULTIMATE CRIT!`, true, '#facc15');
+
+    this.combatStats.damageDealt += ultDamage;
+    this.onMonsterHealthChanged?.(this.monster.currentHp, this.monster.maxHp);
+
+    if (this.monster.currentHp <= 0) {
+      // Cinematic Finishing Execution!
+      SoundManager.getInstance().playFinishingExecution();
+      this.particles.spawnDamageText(
+        (this.hero.x + this.monster.x) / 2,
+        this.groundY - 180,
+        '⚡ FINISHING MOVE EXECUTION! ⚡',
+        true,
+        '#38bdf8'
+      );
+      this.handleCombatVictory();
+    }
+  }
+
   public executeMonsterAttack(damage: number) {
     if (!this.monster || this.monster.isDefeated) return;
 
@@ -629,6 +720,8 @@ export class GameEngine {
             SoundManager.getInstance().playDashWhoosh();
             this.particles.spawnDamageText(this.hero.x, this.hero.y - 25, '★ DODGED! (0 DMG)', true);
             this.particles.spawnSparks(this.hero.x, this.hero.y, '#38bdf8', 18);
+            this.hero.addUltimateCharge(20);
+            this.notifyUltimateState();
             return;
           }
 
@@ -723,6 +816,15 @@ export class GameEngine {
       this.shakeTimer -= dt;
     }
 
+    // Cinematic slow-mo bullet-time during ultimate execution
+    if (this.bulletTimeTimer > 0) {
+      this.bulletTimeTimer -= dt;
+      dt = dt * this.bulletTimeScale;
+      if (this.bulletTimeTimer <= 0) {
+        this.bulletTimeScale = 1.0;
+      }
+    }
+
     // Sync camera transform to InputManager
     this.input.setCameraTransform(this.cameraX, this.cameraY, this.cameraZoom);
     this.mouseX = this.input.mouseScreenX;
@@ -760,6 +862,11 @@ export class GameEngine {
     // Trigger attacks from mouse click or hotkeys J / F
     if (this.input.justAttacked || this.input.justClicked) {
       this.fireRadoxom();
+    }
+
+    // Trigger ultimate skill from KeyR or KeyQ or UI button
+    if (this.input.justUltimated) {
+      this.executeHeroUltimate();
     }
 
     // Trigger interact
@@ -926,6 +1033,8 @@ export class GameEngine {
               this.combatStats.radoxomsHit++;
               this.combatStats.damageDealt += hurtResult.actualDamage;
               this.updateCombatAccuracy();
+              this.hero.addUltimateCharge(18);
+              this.notifyUltimateState();
               this.onMonsterHealthChanged?.(this.monster.currentHp, this.monster.maxHp);
 
               if (this.monster.currentHp <= 0) {

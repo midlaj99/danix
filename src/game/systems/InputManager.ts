@@ -8,6 +8,7 @@ export interface InputState {
   dodge: boolean;
   attack: boolean;
   interact: boolean;
+  ultimate: boolean;
 }
 
 export class InputManager {
@@ -23,6 +24,7 @@ export class InputManager {
     dodge: false,
     attack: false,
     interact: false,
+    ultimate: false,
   };
 
   public mouseScreenX: number = 0;
@@ -34,6 +36,7 @@ export class InputManager {
   public justAttacked: boolean = false;
   public justDodged: boolean = false;
   public justJumped: boolean = false;
+  public justUltimated: boolean = false;
 
   public isEnabled: boolean = true;
   public isTouchMode: boolean = false;
@@ -162,7 +165,7 @@ export class InputManager {
   }
 
   public setVirtualAction(
-    action: 'jump' | 'dodge' | 'sprint' | 'attack' | 'interact',
+    action: 'jump' | 'dodge' | 'sprint' | 'attack' | 'interact' | 'ultimate',
     pressed: boolean
   ) {
     this.isTouchMode = true;
@@ -182,6 +185,9 @@ export class InputManager {
         this.isMouseDown = true;
       } else if (action === 'interact') {
         this.keys.interact = true;
+      } else if (action === 'ultimate') {
+        if (!this.keys.ultimate) this.justUltimated = true;
+        this.keys.ultimate = true;
       }
     } else {
       if (action === 'jump') {
@@ -195,6 +201,8 @@ export class InputManager {
         this.isMouseDown = false;
       } else if (action === 'interact') {
         this.keys.interact = false;
+      } else if (action === 'ultimate') {
+        this.keys.ultimate = false;
       }
     }
   }
@@ -222,6 +230,8 @@ export class InputManager {
     this.keys.dodge = false;
     this.keys.attack = false;
     this.keys.interact = false;
+    this.keys.ultimate = false;
+    this.justUltimated = false;
     this.isMouseDown = false;
     this.justClicked = false;
     this.justAttacked = false;
@@ -313,6 +323,10 @@ export class InputManager {
       this.keys.attack = true;
     }
     if (e.code === 'KeyE') this.keys.interact = true;
+    if (e.code === 'KeyR' || e.code === 'KeyQ') {
+      if (!this.keys.ultimate) this.justUltimated = true;
+      this.keys.ultimate = true;
+    }
   };
 
   private handleKeyUp = (e: KeyboardEvent) => {
@@ -328,6 +342,7 @@ export class InputManager {
     if (e.code === 'KeyC' || e.code === 'KeyK') this.keys.dodge = false;
     if (e.code === 'KeyJ' || e.code === 'KeyF') this.keys.attack = false;
     if (e.code === 'KeyE') this.keys.interact = false;
+    if (e.code === 'KeyR' || e.code === 'KeyQ') this.keys.ultimate = false;
   };
 
   private handleMouseMove = (e: MouseEvent) => {
@@ -376,5 +391,6 @@ export class InputManager {
     this.justAttacked = false;
     this.justDodged = false;
     this.justJumped = false;
+    this.justUltimated = false;
   }
 }

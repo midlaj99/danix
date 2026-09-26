@@ -220,6 +220,62 @@ export class SoundManager {
     osc2.stop(time + 0.65);
   }
 
+  public playUltimateBurst() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    // 1. Rising Energy Charge Oscillator (Sweep 180Hz -> 880Hz)
+    const chargeOsc = this.ctx.createOscillator();
+    const chargeGain = this.ctx.createGain();
+    chargeOsc.type = 'sawtooth';
+    chargeOsc.frequency.setValueAtTime(180, time);
+    chargeOsc.frequency.exponentialRampToValueAtTime(920, time + 0.35);
+
+    chargeGain.gain.setValueAtTime(0.01, time);
+    chargeGain.gain.linearRampToValueAtTime(0.4, time + 0.3);
+    chargeGain.gain.exponentialRampToValueAtTime(0.001, time + 0.38);
+
+    chargeOsc.connect(chargeGain);
+    chargeGain.connect(this.sfxGain);
+    chargeOsc.start(time);
+    chargeOsc.stop(time + 0.4);
+
+    // 2. Thunderous Sub-Bass Blast (140Hz -> 30Hz)
+    const blastOsc = this.ctx.createOscillator();
+    const blastGain = this.ctx.createGain();
+    blastOsc.type = 'triangle';
+    blastOsc.frequency.setValueAtTime(160, time + 0.32);
+    blastOsc.frequency.exponentialRampToValueAtTime(28, time + 0.95);
+
+    blastGain.gain.setValueAtTime(0.7, time + 0.32);
+    blastGain.gain.exponentialRampToValueAtTime(0.001, time + 1.05);
+
+    blastOsc.connect(blastGain);
+    blastGain.connect(this.sfxGain);
+    blastOsc.start(time + 0.32);
+    blastOsc.stop(time + 1.1);
+  }
+
+  public playFinishingExecution() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    // Resonant slow-mo bell chime
+    const bellOsc = this.ctx.createOscillator();
+    const bellGain = this.ctx.createGain();
+    bellOsc.type = 'sine';
+    bellOsc.frequency.setValueAtTime(1046.5, time); // C6
+    bellGain.gain.setValueAtTime(0.5, time);
+    bellGain.gain.exponentialRampToValueAtTime(0.001, time + 1.2);
+
+    bellOsc.connect(bellGain);
+    bellGain.connect(this.sfxGain);
+    bellOsc.start(time);
+    bellOsc.stop(time + 1.25);
+  }
+
   public playAttackSlash() {
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;

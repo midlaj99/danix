@@ -12,6 +12,9 @@ interface TouchControlsProps {
   onInteract?: () => void;
   attackCooldownPercent?: number;
   dodgeCooldownPercent?: number;
+  ultimateCharge?: number;
+  isUltimateReady?: boolean;
+  onTriggerUltimate?: () => void;
 }
 
 export const TouchControls: React.FC<TouchControlsProps> = ({
@@ -21,6 +24,9 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   nearPuzzleGate,
   onInteract,
   dodgeCooldownPercent = 0,
+  ultimateCharge = 0,
+  isUltimateReady = false,
+  onTriggerUltimate,
 }) => {
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(false);
   const [controlScale, setControlScale] = useState<number>(1.0);
@@ -377,8 +383,39 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
             </div>
           )}
 
-          {/* Action Buttons Column: JUMP & DODGE */}
-          <div className="flex flex-col items-center gap-2">
+          {/* Action Buttons Column: ULTIMATE, JUMP & DODGE */}
+          <div className="flex flex-col items-center gap-1.5">
+            {/* ULTIMATE SKILL BUTTON (COMBAT) */}
+            {isCombat && (
+              <button
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  triggerHaptic(28);
+                  if (onTriggerUltimate) onTriggerUltimate();
+                  else inputManager.setVirtualAction('ultimate', true);
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  inputManager.setVirtualAction('ultimate', false);
+                }}
+                className={`relative rounded-2xl border-2 flex flex-col items-center justify-center transition-all shadow-lg active:scale-94 backdrop-blur-md cursor-pointer ${
+                  isUltimateReady
+                    ? 'bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 border-white text-slate-950 shadow-[0_0_25px_#f59e0b] animate-bounce'
+                    : 'bg-slate-950/85 border-amber-500/40 text-amber-400 opacity-80'
+                }`}
+                style={{
+                  width: `${actionBtnSize}px`,
+                  height: `${actionBtnSize * 0.9}px`,
+                }}
+                aria-label="Ultimate Skill"
+              >
+                <Zap className={`w-4 h-4 ${isUltimateReady ? 'fill-slate-950 text-slate-950 animate-pulse' : 'text-amber-400'}`} />
+                <span className="text-[7.5px] font-black font-rpg tracking-wider">
+                  {isUltimateReady ? 'ULT!' : `${Math.round(ultimateCharge)}%`}
+                </span>
+              </button>
+            )}
+
             {/* TACTICAL DODGE ROLL */}
             <button
               onTouchStart={handleDodgeTouchStart}

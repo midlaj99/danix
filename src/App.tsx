@@ -73,6 +73,9 @@ export const App: React.FC = () => {
   const [retryTargetNeeded, setRetryTargetNeeded] = useState<number>(0);
   const [retryExistingAmmo, setRetryExistingAmmo] = useState<number>(0);
   const [usedQuestionIds, setUsedQuestionIds] = useState<Set<string>>(new Set());
+  const [ultimateCharge, setUltimateCharge] = useState<number>(0);
+  const [isUltimateReady, setIsUltimateReady] = useState<boolean>(false);
+  const [ultimateName, setUltimateName] = useState<string>('Zero-G Shatter');
 
   // Active level data
   const currentLevelId = gameState.currentLevelId;
@@ -240,6 +243,12 @@ export const App: React.FC = () => {
 
     engine.onAIDebugUpdate = (snapshot) => {
       setAiDebugSnapshot(snapshot);
+    };
+
+    engine.onUltimateChargeChanged = (charge, isReady, ultName) => {
+      setUltimateCharge(charge);
+      setIsUltimateReady(isReady);
+      setUltimateName(ultName);
     };
 
     engine.onShrineActivated = () => {
@@ -585,6 +594,9 @@ export const App: React.FC = () => {
           radoxomsAvailable={radoxomsAvailable}
           nearShrine={engineRef.current?.nearShrine || false}
           nearPuzzleGate={engineRef.current?.nearPuzzleGate || false}
+          ultimateCharge={ultimateCharge}
+          isUltimateReady={isUltimateReady}
+          onTriggerUltimate={() => engineRef.current?.executeHeroUltimate()}
           onInteract={() => {
             if (engineRef.current?.nearPuzzleGate) {
               setShowPuzzleGateModal(true);
@@ -675,7 +687,7 @@ export const App: React.FC = () => {
           totalQuestions={levelQuestions.length}
           playerStats={gameState.playerStats}
           activeSkill={activeSkill}
-          onCommenceCombat={handleCommenceCombat}
+          onCommenceCombat={() => setCurrentScreen('MONSTER_INTRO')}
         />
       )}
 
@@ -700,6 +712,10 @@ export const App: React.FC = () => {
           monsterDefenseState={engineRef.current?.monster?.activeDefenseState ?? 'NEUTRAL'}
           monsterPoise={engineRef.current?.monster?.director?.poise ?? 100}
           monsterMaxPoise={engineRef.current?.monster?.director?.maxPoise ?? 100}
+          ultimateCharge={ultimateCharge}
+          isUltimateReady={isUltimateReady}
+          ultimateName={ultimateName}
+          onTriggerUltimate={() => engineRef.current?.executeHeroUltimate()}
           onPause={() => {
             setShowPauseModal(true);
             if (engineRef.current) engineRef.current.isPaused = true;
