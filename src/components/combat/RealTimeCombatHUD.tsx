@@ -21,6 +21,10 @@ interface RealTimeCombatHUDProps {
   debugSnapshot?: CombatAIDebugSnapshot | null;
   onToggleAIDebug?: () => void;
   onPause?: () => void;
+  isHeroStatic?: boolean;
+  monsterDefenseState?: 'NEUTRAL' | 'GUARDING' | 'ADAPTIVE' | 'ENRAGED' | 'STAGGERED';
+  monsterPoise?: number;
+  monsterMaxPoise?: number;
 }
 
 export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
@@ -39,6 +43,10 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
   debugSnapshot = null,
   onToggleAIDebug,
   onPause,
+  isHeroStatic = false,
+  monsterDefenseState = 'NEUTRAL',
+  monsterPoise = 100,
+  monsterMaxPoise = 100,
 }) => {
   const hpRatio = Math.max(0, Math.min(1, heroStats.currentHp / heroStats.maxHp));
   const shieldRatio = Math.max(0, Math.min(1, heroStats.currentShield / heroStats.maxShield));
@@ -161,9 +169,54 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
               style={{ width: `${monsterHpRatio * 100}%` }}
             />
           </div>
-          <span className="text-[7.5px] font-mono text-rose-400/90 font-bold mt-0.5">
-            {monsterHp} / {monsterMaxHp} HP
-          </span>
+          <div className="flex items-center justify-between w-full text-[7px] font-mono font-bold mt-0.5 px-0.5">
+            <span className="text-rose-400/90">{monsterHp} / {monsterMaxHp} HP</span>
+            <span className="text-slate-400">POISE {Math.round(monsterPoise)}</span>
+          </div>
+
+          {/* Micro Monster Poise Bar */}
+          <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden border border-slate-700/60 mt-0.5">
+            <div
+              className={`h-full transition-all duration-150 rounded-full ${
+                monsterDefenseState === 'STAGGERED'
+                  ? 'bg-amber-400 animate-pulse'
+                  : monsterDefenseState === 'GUARDING'
+                  ? 'bg-sky-400 shadow-[0_0_6px_#38bdf8]'
+                  : 'bg-indigo-400'
+              }`}
+              style={{ width: `${Math.max(0, Math.min(1, monsterPoise / monsterMaxPoise)) * 100}%` }}
+              title={`Monster Poise: ${Math.round(monsterPoise)}/${monsterMaxPoise}`}
+            />
+          </div>
+
+          {/* Dynamic Monster Defense State Badge */}
+          <div className="mt-1 flex items-center justify-center">
+            {monsterDefenseState === 'STAGGERED' && (
+              <span className="px-1.5 py-0.2 rounded bg-amber-500/25 border border-amber-400/60 text-amber-300 text-[6.5px] sm:text-[7.5px] font-bold font-mono animate-bounce">
+                💫 GUARD BROKEN (+50% DMG)
+              </span>
+            )}
+            {monsterDefenseState === 'GUARDING' && (
+              <span className="px-1.5 py-0.2 rounded bg-sky-500/25 border border-sky-400/60 text-sky-300 text-[6.5px] sm:text-[7.5px] font-bold font-mono">
+                🛡️ SHIELD GUARD (-75% DMG)
+              </span>
+            )}
+            {monsterDefenseState === 'ADAPTIVE' && (
+              <span className="px-1.5 py-0.2 rounded bg-slate-700/50 border border-slate-500/60 text-slate-200 text-[6.5px] sm:text-[7.5px] font-bold font-mono">
+                ⚡ ADAPTIVE ARMOR (FLANK TO CRIT)
+              </span>
+            )}
+            {monsterDefenseState === 'ENRAGED' && (
+              <span className="px-1.5 py-0.2 rounded bg-rose-500/30 border border-rose-400/70 text-rose-300 text-[6.5px] sm:text-[7.5px] font-bold font-mono animate-pulse">
+                🔥 BLOODRAGE ENRAGED (+25% RESIST)
+              </span>
+            )}
+            {monsterDefenseState === 'NEUTRAL' && (
+              <span className="px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-slate-400 text-[6px] sm:text-[7px] font-mono">
+                ⚔️ FRONTAL RESIST ACTIVE
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 3. TOP-RIGHT: COMPACT RADOXOM BADGE & CONTROLS */}
@@ -243,6 +296,25 @@ export const RealTimeCombatHUD: React.FC<RealTimeCombatHUDProps> = ({
           </div>
         </div>
       )}
+
+      {/* DYNAMIC MOMENTUM & ANTI-STATIC STANCE ALERT */}
+      <div className="w-full flex justify-center pb-1 pointer-events-none">
+        {isHeroStatic ? (
+          <div className="bg-rose-950/90 border border-rose-500/80 px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full shadow-[0_0_20px_rgba(244,63,94,0.45)] flex items-center gap-1.5 animate-pulse">
+            <span className="text-xs sm:text-sm">⚠️</span>
+            <span className="text-[8.5px] sm:text-[11px] font-rpg font-black text-rose-200 tracking-wide">
+              STATIC STANCE: ATTACKS LOCKED! MOVE OR JUMP TO STRIKE!
+            </span>
+          </div>
+        ) : (
+          <div className="bg-slate-950/80 border border-emerald-500/40 px-2.5 py-0.5 sm:px-3.5 sm:py-1 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.2)] flex items-center gap-1.5">
+            <span className="text-emerald-400 text-xs">⚡</span>
+            <span className="text-[8px] sm:text-[9.5px] font-rpg font-bold text-emerald-300 tracking-wide">
+              MOMENTUM ACTIVE: SPRINT, FLANK & JUMP FOR CRITICAL STRIKES
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Bottom Desktop Combat Hints (Hidden on Mobile) */}
       <div className="w-full hidden md:flex items-center justify-center pb-1 pointer-events-none">

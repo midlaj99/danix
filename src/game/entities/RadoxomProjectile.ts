@@ -26,6 +26,8 @@ export class RadoxomProjectile {
   public status: RadoxomStatus = 'fired';
   public trail: TrailPoint[] = [];
   private trailTimer: number = 0;
+  public launchedWhileStatic: boolean = false;
+  public originHeroX: number = 0;
 
   constructor(
     startX: number,

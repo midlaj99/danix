@@ -696,6 +696,10 @@ export const App: React.FC = () => {
           monsterMaxDodgeCharges={engineRef.current?.monster?.director?.maxDodgeCharges ?? 1}
           debugSnapshot={aiDebugSnapshot}
           onToggleAIDebug={() => engineRef.current?.toggleAIDebugOverlay()}
+          isHeroStatic={engineRef.current?.hero?.isStaticStance ?? false}
+          monsterDefenseState={engineRef.current?.monster?.activeDefenseState ?? 'NEUTRAL'}
+          monsterPoise={engineRef.current?.monster?.director?.poise ?? 100}
+          monsterMaxPoise={engineRef.current?.monster?.director?.maxPoise ?? 100}
           onPause={() => {
             setShowPauseModal(true);
             if (engineRef.current) engineRef.current.isPaused = true;

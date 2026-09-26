@@ -22,6 +22,32 @@ export type MonsterState =
   | 'dive_attack'
   | 'fly_retreat';
 
+export interface AttackDamageContext {
+  damage: number;
+  attackerX: number;
+  attackerY?: number;
+  attackerVx: number;
+  attackerIsGrounded: boolean;
+  attackerIsAirborne: boolean;
+  attackerIsDodging: boolean;
+  attackerIsStatic: boolean;
+  attackType?: string;
+  isMeleeSlash?: boolean;
+}
+
+export interface HurtResult {
+  actualDamage: number;
+  wasDeflected: boolean;
+  wasGuarded: boolean;
+  wasFlank: boolean;
+  wasCounterHit: boolean;
+  wasMomentumHit: boolean;
+  poiseBroken: boolean;
+  feedbackText: string;
+  feedbackColor: string;
+  isCritical: boolean;
+}
+
 export class Monster {
   public x: number = 700;
   public y: number = 380;
@@ -70,6 +96,14 @@ export class Monster {
   public knockbackVx: number = 0;
   public knockbackVy: number = 0;
   public massFactor: number = 1.0;
+
+  // Dynamic Resistance & Anti-Static Deflection System
+  public adaptiveResistance: number = 0;
+  public lastHitSide: 'left' | 'right' | 'none' = 'none';
+  public consecutiveSideHits: number = 0;
+  public isStaggered: boolean = false;
+  public guardBreakTimer: number = 0;
+  public activeDefenseState: 'NEUTRAL' | 'GUARDING' | 'ADAPTIVE' | 'ENRAGED' | 'STAGGERED' = 'NEUTRAL';
 
   // Attack Combo Chain State
   public activeCombo: ('slash' | 'dash' | 'jump_slam' | 'projectile' | 'shockwave')[] | null = null;
@@ -366,6 +400,27 @@ export class Monster {
     this.isGuarding = this.director.isGuarding;
     this.isFeinting = this.director.isFeinting;
 
+    // 0. Update Guard Break Stagger & Dynamic Defense
+    if (this.guardBreakTimer > 0) {
+      this.guardBreakTimer -= dt;
+      if (this.guardBreakTimer <= 0) {
+        this.isStaggered = false;
+      }
+    }
+
+    // Dynamic Defense State calculation
+    if (this.isStaggered) {
+      this.activeDefenseState = 'STAGGERED';
+    } else if (this.isGuarding) {
+      this.activeDefenseState = 'GUARDING';
+    } else if (this.isEnraged) {
+      this.activeDefenseState = 'ENRAGED';
+    } else if (this.adaptiveResistance > 0.15) {
+      this.activeDefenseState = 'ADAPTIVE';
+    } else {
+      this.activeDefenseState = 'NEUTRAL';
+    }
+
     // Track player stationary camping to punish turret playstyle
     if (Math.abs(heroX - this.lastHeroX) < 4 && Math.abs(heroVx) < 15) {
       this.playerStillTimer += dt;
@@ -392,15 +447,15 @@ export class Monster {
       this.currentPhase = 1;
     }
 
-    // Enraged state if in final phase or HP <= 25%
-    this.isEnraged = hpRatio <= 0.25 || (this.difficulty.phaseCount > 1 && this.currentPhase === this.difficulty.phaseCount);
+    // Enraged state if in final phase or HP <= 38%
+    this.isEnraged = hpRatio <= 0.38 || (this.difficulty.phaseCount > 1 && this.currentPhase === this.difficulty.phaseCount);
 
-    const dmgMultiplier = this.difficulty.monsterDamageMultiplier * (this.isEnraged ? 1.2 : 1.0);
+    const dmgMultiplier = this.difficulty.monsterDamageMultiplier * (this.isEnraged ? 1.25 : 1.0);
     const scaledAttack = Math.round(this.config.attack * dmgMultiplier);
 
-    // Hazard Spawning for Arena Control (punish stationary camping or high arenaControl levels)
+    // Hazard Spawning for Arena Control (severely punishes stationary camping)
     if (onSpawnHazard && this.difficulty.arenaControl > 0 && this.hazardCooldown <= 0) {
-      const campTrigger = this.playerStillTimer > 1.3;
+      const campTrigger = this.playerStillTimer > 0.45;
       const randomPressure = Math.random() < this.difficulty.arenaControl * 0.04;
       if (campTrigger || randomPressure) {
         const hazardX = campTrigger ? heroX : heroX + (Math.random() - 0.5) * 180;
@@ -944,37 +999,180 @@ export class Monster {
     }
   }
 
-  public triggerHurt(damage: number, impactForceX: number = 0, impactForceY: number = -120): void {
+  public punishStaticCamper(heroX: number): void {
+    if (this.isDefeated || this.state === 'death' || this.isStaggered) return;
+    this.facingRight = heroX > this.x;
+    this.director.triggerImmediatePunish(heroX);
+    this.attackCooldown = 0.08;
+    this.vx = (this.facingRight ? 1 : -1) * (this.difficulty.movementSpeed * 1.6);
+  }
+
+  public triggerHurt(
+    damage: number,
+    context?: AttackDamageContext,
+    impactForceX: number = 0,
+    impactForceY: number = -120
+  ): HurtResult {
     let finalDamage = damage;
-    if (this.isGuarding) {
-      // 65% Poise Damage Reduction when blocking!
-      finalDamage = Math.max(1, Math.round(damage * 0.35));
-    } else if (this.isVulnerable) {
-      // 35% Counter-Hit Bonus during recovery punish window!
-      finalDamage = Math.round(damage * 1.35);
+    let wasDeflected = false;
+    let wasGuarded = false;
+    let wasFlank = false;
+    let wasCounterHit = false;
+    let wasMomentumHit = false;
+    let feedbackText = '';
+    let feedbackColor = '#ef4444';
+    let isCritical = false;
+
+    const attackerX = context ? context.attackerX : (this.facingRight ? this.x - 100 : this.x + 100);
+    const attackerIsStatic = context ? context.attackerIsStatic : false;
+    const attackerVx = context ? context.attackerVx : 0;
+    const attackerIsAirborne = context ? context.attackerIsAirborne : false;
+    const attackerIsGrounded = context ? context.attackerIsGrounded : true;
+
+    // 1. STRICT ANTI-STATIC DEFLECTION & IMMEDIATE RETALIATION:
+    // If hero attacks from a static stance, the monster completely deflects the blow and retaliates!
+    if (attackerIsStatic || (Math.abs(attackerVx) < 20 && !attackerIsAirborne && attackerIsGrounded && context)) {
+      wasDeflected = true;
+      finalDamage = 0;
+      feedbackText = '★ STATIC DEFLECTED! (0 DMG)';
+      feedbackColor = '#f59e0b';
+
+      this.director.triggerImmediatePunish(attackerX);
+      this.punishStaticCamper(attackerX);
+
+      const kx = this.facingRight ? -40 : 40;
+      this.applyKnockback(kx, -40);
+
+      return {
+        actualDamage: 0,
+        wasDeflected: true,
+        wasGuarded: false,
+        wasFlank: false,
+        wasCounterHit: false,
+        wasMomentumHit: false,
+        poiseBroken: false,
+        feedbackText,
+        feedbackColor,
+        isCritical: false,
+      };
     }
 
+    // 2. GUARD BROKEN / STAGGER VULNERABILITY (+50% DAMAGE)
+    if (this.isStaggered || this.guardBreakTimer > 0) {
+      finalDamage = Math.round(damage * 1.5);
+      feedbackText = `💥 GUARD BROKEN! -${finalDamage}`;
+      feedbackColor = '#facc15';
+      isCritical = true;
+    }
+    // 3. COUNTER-HIT VULNERABILITY (During telegraph or recovery windows)
+    else if (this.isVulnerable || this.state === 'telegraph_attack') {
+      wasCounterHit = true;
+      finalDamage = Math.round(damage * 1.4);
+      feedbackText = `⚡ COUNTER PUNISH! -${finalDamage}`;
+      feedbackColor = '#38bdf8';
+      isCritical = true;
+    }
+    // 4. DYNAMIC DIRECTIONAL DEFENSE: Frontal Guard vs Flank Striking
+    else {
+      const hitFromFront = (this.facingRight && attackerX < this.x) || (!this.facingRight && attackerX > this.x);
+
+      if (!hitFromFront) {
+        // FLANK / BACKSTAB HIT: Bypasses frontal shield!
+        wasFlank = true;
+        this.consecutiveSideHits = 0;
+        this.adaptiveResistance = Math.max(0, this.adaptiveResistance - 0.25);
+        finalDamage = Math.round(damage * 1.25);
+        feedbackText = `★ FLANK CRIT! -${finalDamage}`;
+        feedbackColor = '#a855f7';
+        isCritical = true;
+      } else {
+        // FRONTAL ATTACK: Dynamic Guard & Adaptive Resistance
+        const hitSide = attackerX < this.x ? 'left' : 'right';
+        if (this.lastHitSide === hitSide) {
+          this.consecutiveSideHits++;
+          this.adaptiveResistance = Math.min(0.60, this.consecutiveSideHits * 0.15);
+        } else {
+          this.lastHitSide = hitSide;
+          this.consecutiveSideHits = 1;
+        }
+
+        if (this.isGuarding) {
+          wasGuarded = true;
+          finalDamage = Math.max(1, Math.round(damage * 0.25)); // 75% damage reduction
+          feedbackText = `🛡️ SHIELD BLOCKED! -${finalDamage}`;
+          feedbackColor = '#38bdf8';
+        } else {
+          const resistPercent = Math.min(0.70, 0.30 + this.adaptiveResistance);
+          finalDamage = Math.max(1, Math.round(damage * (1 - resistPercent)));
+          wasGuarded = true;
+          feedbackText = this.adaptiveResistance > 0.2
+            ? `⚡ ADAPTIVE ARMOR! -${finalDamage}`
+            : `🛡️ RESISTED! -${finalDamage}`;
+          feedbackColor = '#94a3b8';
+        }
+      }
+    }
+
+    // 5. AIRBORNE / HIGH-SPEED MOMENTUM BONUS (+20%)
+    if (attackerIsAirborne || Math.abs(attackerVx) > 280) {
+      wasMomentumHit = true;
+      finalDamage = Math.round(finalDamage * 1.2);
+      if (!feedbackText.includes('CRIT') && !feedbackText.includes('BLOCKED')) {
+        feedbackText = `☄️ MOMENTUM! -${finalDamage}`;
+        feedbackColor = '#34d399';
+      }
+    }
+
+    // 6. ENRAGED PASSIVE RESISTANCE (< 40% HP)
+    if (this.isEnraged && !this.isStaggered) {
+      finalDamage = Math.max(1, Math.round(finalDamage * 0.8));
+    }
+
+    // Apply Health Deduction
     this.currentHp = Math.max(0, this.currentHp - finalDamage);
 
-    // Poise Check: normal hits deduct poise without locking the monster in a frozen hurt state!
-    const poiseBroken = this.director.takePoiseDamage(finalDamage);
+    // Poise Check: Flank and momentum hits shred poise faster
+    const poiseMultiplier = wasFlank ? 1.8 : wasMomentumHit ? 1.4 : wasGuarded ? 0.7 : 1.0;
+    const poiseDamage = finalDamage * poiseMultiplier;
+    const poiseBroken = this.director.takePoiseDamage(poiseDamage);
 
     if (poiseBroken) {
-      // Poise broken: trigger heavy stagger
-      this.hurtTimer = 0.28;
+      this.isStaggered = true;
+      this.guardBreakTimer = 1.2;
+      this.hurtTimer = 0.35;
       this.state = 'hurt';
-      const kx = impactForceX !== 0 ? impactForceX : (this.facingRight ? -170 : 170);
+      feedbackText = `💥 GUARD BROKEN! STAGGERED!`;
+      feedbackColor = '#facc15';
+      isCritical = true;
+      const kx = impactForceX !== 0 ? impactForceX : (this.facingRight ? -200 : 200);
       this.applyKnockback(kx, impactForceY);
     } else {
-      // Poise held firm! Visual flash, light physical resistance impulse, NO AI FREEZE
       this.hurtTimer = 0.08;
-      const kx = impactForceX !== 0 ? impactForceX * 0.3 : (this.facingRight ? -50 : 50);
+      const kx = impactForceX !== 0 ? impactForceX * 0.3 : (this.facingRight ? -60 : 60);
       this.applyKnockback(kx, impactForceY * 0.2);
+
+      // Chance of aggressive counter-attack if hit while not staggered
+      if (!this.isStaggered && Math.random() < 0.38) {
+        this.director.triggerImmediatePunish(attackerX);
+      }
     }
 
     if (this.currentHp <= 0) {
       this.triggerDeath();
     }
+
+    return {
+      actualDamage: finalDamage,
+      wasDeflected,
+      wasGuarded,
+      wasFlank,
+      wasCounterHit,
+      wasMomentumHit,
+      poiseBroken,
+      feedbackText,
+      feedbackColor,
+      isCritical,
+    };
   }
 
   public getDebugSnapshot(heroX: number): CombatAIDebugSnapshot {
@@ -1044,6 +1242,51 @@ export class Monster {
       ctx.setLineDash([6, 4]);
       ctx.beginPath();
       ctx.arc(0, -this.height / 2, this.width * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Guard Broken Stagger Indicator
+    if (this.isStaggered || this.guardBreakTimer > 0) {
+      ctx.save();
+      const sAngle = performance.now() * 0.008;
+      ctx.fillStyle = '#facc15';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('💫 GUARD BROKEN!', 0, -this.height - 22 + bob);
+      // Orbiting dizzy stars
+      for (let i = 0; i < 3; i++) {
+        const a = sAngle + (i * Math.PI * 2) / 3;
+        const sx = Math.cos(a) * 22;
+        const sy = -this.height - 12 + Math.sin(a) * 6 + bob;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Adaptive Armor Hexagonal Barrier
+    if (this.adaptiveResistance > 0.2 && !this.isStaggered) {
+      ctx.save();
+      const aPulse = (Math.sin(performance.now() * 0.01) + 1) * 0.5;
+      ctx.strokeStyle = `rgba(148, 163, 184, ${0.4 + aPulse * 0.35})`;
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath();
+      ctx.arc(0, -this.height / 2, this.width * 0.65, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Bloodrage Flame Aura
+    if (this.isEnraged && !this.isStaggered) {
+      ctx.save();
+      const ePulse = (Math.sin(performance.now() * 0.02) + 1) * 0.5;
+      ctx.strokeStyle = `rgba(239, 68, 68, ${0.6 + ePulse * 0.4})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, -this.height / 2, this.width * 0.72 + ePulse * 4, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }

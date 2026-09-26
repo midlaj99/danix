@@ -52,6 +52,7 @@ export interface LessonTheory {
     breakdown: string;
     visualArray?: string[][];
   };
+  summary?: string[];
 }
 
 export interface MiniPractice {

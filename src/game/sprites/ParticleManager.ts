@@ -85,14 +85,14 @@ export class ParticleManager {
     }
   }
 
-  public spawnDamageText(x: number, y: number, text: string, isCrit: boolean = false) {
+  public spawnDamageText(x: number, y: number, text: string, isCrit: boolean = false, customColor?: string) {
     this.particles.push({
       x: x + (Math.random() * 20 - 10),
       y: y - 20,
       vx: (Math.random() - 0.5) * 30,
       vy: -90,
-      color: isCrit ? '#fbbf24' : '#ef4444',
-      size: isCrit ? 26 : 20,
+      color: customColor ? customColor : (isCrit ? '#fbbf24' : '#ef4444'),
+      size: isCrit ? 25 : 19,
       alpha: 1,
       life: 0.9,
       maxLife: 0.9,

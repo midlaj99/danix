@@ -357,6 +357,19 @@ export class GameEngine {
     const targetWorldX = startX + Math.cos(aimAngle) * 550;
     const targetWorldY = startY + Math.sin(aimAngle) * 550;
 
+    // 0. STRICT ANTI-STATIC REQUIREMENT: Hero MUST have movement momentum to initiate attacks!
+    if (this.isRealTimeCombat && this.hero.isStaticStance) {
+      this.hero.staticWarnTimer = 0.45;
+      SoundManager.getInstance().playShieldBlock();
+      this.triggerScreenShake(0.12, 4);
+      this.particles.spawnDamageText(this.hero.x, this.hero.y - 30, '⚠️ MOVE TO STRIKE! (STATIC)', false, '#f59e0b');
+      this.particles.spawnSparks(this.hero.x, this.hero.y + this.hero.height - 4, '#f59e0b', 16);
+      if (this.monster && !this.monster.isDefeated) {
+        this.monster.punishStaticCamper(this.hero.x);
+      }
+      return;
+    }
+
     // Guaranteed attack: if in real-time combat and has ammo -> fire Radoxom
     if (this.isRealTimeCombat && this.radoxomsAvailable > 0) {
       const projectileId = `PROJ-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -376,6 +389,8 @@ export class GameEngine {
       else if (this.hero.attackStyle === 'omnislash') radoxomType = 'omnislash';
 
       const proj = new RadoxomProjectile(startX, startY, targetWorldX, targetWorldY, radoxomType, 1.0);
+      proj.launchedWhileStatic = this.hero.isStaticStance;
+      proj.originHeroX = this.hero.x;
       this.radoxomProjectiles.push(proj);
 
       // Attack audio
@@ -390,7 +405,7 @@ export class GameEngine {
       this.onRadoxomCountChanged?.(this.radoxomsAvailable);
       this.updateCombatAccuracy();
     } else {
-      // Kinetic Vector Slash Wave fallback! Always allows attacking, never stuck or blocked!
+      // Kinetic Vector Slash Wave fallback!
       this.hero.triggerAttack();
       SoundManager.getInstance().playAttackSlash();
 
@@ -403,6 +418,8 @@ export class GameEngine {
         'vector',
         0.55
       );
+      kineticWave.launchedWhileStatic = this.hero.isStaticStance;
+      kineticWave.originHeroX = this.hero.x;
       this.radoxomProjectiles.push(kineticWave);
       this.particles.spawnSlashWave(this.hero.x + 20, this.hero.y + 10, this.hero.facingRight, this.hero.auraColor);
 
@@ -514,6 +531,17 @@ export class GameEngine {
   }
 
   public executeHeroAttack(damage: number, isCrit: boolean = false) {
+    if (this.hero.isStaticStance) {
+      this.hero.staticWarnTimer = 0.45;
+      SoundManager.getInstance().playShieldBlock();
+      this.particles.spawnDamageText(this.hero.x, this.hero.y - 30, '⚠️ MOVE TO STRIKE! (STATIC)', false, '#f59e0b');
+      this.particles.spawnSparks(this.hero.x, this.hero.y + this.hero.height - 4, '#f59e0b', 16);
+      if (this.monster && !this.monster.isDefeated) {
+        this.monster.punishStaticCamper(this.hero.x);
+      }
+      return;
+    }
+
     if (this.monster) {
       this.hero.triggerAttack(this.monster.x);
     } else {
@@ -531,34 +559,56 @@ export class GameEngine {
 
     setTimeout(() => {
       if (this.monster && !this.monster.isDefeated) {
-        this.monster.triggerHurt(damage);
-        SoundManager.getInstance().playHitImpact();
-        this.triggerScreenShake(0.3, isCrit ? 14 : 8);
-        this.particles.spawnSparks(
-          this.monster.x + 30,
-          this.monster.y + 35,
-          isCrit ? '#fbbf24' : this.hero.auraColor,
-          28
-        );
-        this.particles.spawnDamageText(this.monster.x + 30, this.monster.y - 15, `-${damage} HP`, isCrit);
-        this.particles.spawnSlashWave(this.hero.x + 20, this.hero.y + 10, this.hero.facingRight, this.hero.auraColor);
+        const hurtResult = this.monster.triggerHurt(damage, {
+          damage,
+          attackerX: this.hero.x,
+          attackerY: this.hero.y,
+          attackerVx: this.hero.vx,
+          attackerIsGrounded: this.hero.isGrounded,
+          attackerIsAirborne: !this.hero.isGrounded,
+          attackerIsDodging: this.hero.isDodging,
+          attackerIsStatic: this.hero.isStaticStance,
+          isMeleeSlash: true,
+        });
 
-        // AoE Splash Damage to Minions on multi-monster battle
-        if (this.minions.length > 0 && this.hero.attackStyle !== 'slash') {
-          const splashDmg = Math.max(15, Math.round(damage * 0.65));
-          for (const minion of this.minions) {
-            if (!minion.isDefeated) {
-              minion.triggerHurt(splashDmg);
-              this.particles.spawnSparks(minion.x + 20, minion.y + 20, this.hero.auraColor, 18);
-              this.particles.spawnDamageText(minion.x + 20, minion.y - 10, `-${splashDmg} AOE`, false);
+        if (hurtResult.wasDeflected) {
+          SoundManager.getInstance().playShieldBlock();
+          this.triggerScreenShake(0.2, 8);
+          this.particles.spawnDamageText(this.monster.x + 30, this.monster.y - 15, hurtResult.feedbackText, false, hurtResult.feedbackColor);
+          this.particles.spawnSparks(this.monster.x + 30, this.monster.y + 35, '#f59e0b', 24);
+        } else {
+          if (hurtResult.wasGuarded) {
+            SoundManager.getInstance().playSwordClash();
+          } else {
+            SoundManager.getInstance().playHitImpact();
+          }
+          this.triggerScreenShake(0.3, hurtResult.isCritical ? 14 : 8);
+          this.particles.spawnSparks(
+            this.monster.x + 30,
+            this.monster.y + 35,
+            hurtResult.isCritical ? '#fbbf24' : this.hero.auraColor,
+            28
+          );
+          this.particles.spawnDamageText(this.monster.x + 30, this.monster.y - 15, hurtResult.feedbackText, hurtResult.isCritical, hurtResult.feedbackColor);
+          this.particles.spawnSlashWave(this.hero.x + 20, this.hero.y + 10, this.hero.facingRight, this.hero.auraColor);
+
+          // AoE Splash Damage to Minions on multi-monster battle
+          if (this.minions.length > 0 && this.hero.attackStyle !== 'slash') {
+            const splashDmg = Math.max(15, Math.round(damage * 0.65));
+            for (const minion of this.minions) {
+              if (!minion.isDefeated) {
+                minion.triggerHurt(splashDmg);
+                this.particles.spawnSparks(minion.x + 20, minion.y + 20, this.hero.auraColor, 18);
+                this.particles.spawnDamageText(minion.x + 20, minion.y - 10, `-${splashDmg} AOE`, false);
+              }
             }
           }
-        }
 
-        if (this.monster.currentHp <= 0) {
-          setTimeout(() => {
-            if (this.onMonsterDefeat) this.onMonsterDefeat();
-          }, 900);
+          if (this.monster.currentHp <= 0) {
+            setTimeout(() => {
+              if (this.onMonsterDefeat) this.onMonsterDefeat();
+            }, 900);
+          }
         }
       }
     }, 240);
@@ -845,20 +895,42 @@ export class GameEngine {
           if (p.checkCollision(this.monster.x, this.monster.y, this.monster.width, this.monster.height)) {
             if (p.alreadyResolved) continue;
             p.consume('hit');
-            this.combatStats.radoxomsHit++;
-            this.combatStats.damageDealt += p.damage;
-            this.updateCombatAccuracy();
 
-            this.monster.triggerHurt(p.damage);
-            SoundManager.getInstance().playHitImpact();
-            this.triggerScreenShake(0.3, 12);
-            this.particles.spawnSparks(p.x, p.y, p.color, 28);
-            this.particles.spawnDamageText(this.monster.x + 25, this.monster.y - 15, `-${p.damage} HP`, true);
+            const hurtResult = this.monster.triggerHurt(p.damage, {
+              damage: p.damage,
+              attackerX: this.hero.x,
+              attackerY: this.hero.y,
+              attackerVx: this.hero.vx,
+              attackerIsGrounded: this.hero.isGrounded,
+              attackerIsAirborne: !this.hero.isGrounded,
+              attackerIsDodging: this.hero.isDodging,
+              attackerIsStatic: this.hero.isStaticStance || p.launchedWhileStatic,
+              attackType: p.type,
+            });
 
-            this.onMonsterHealthChanged?.(this.monster.currentHp, this.monster.maxHp);
+            if (hurtResult.wasDeflected) {
+              SoundManager.getInstance().playShieldBlock();
+              this.triggerScreenShake(0.18, 7);
+              this.particles.spawnDamageText(this.monster.x + 25, this.monster.y - 20, hurtResult.feedbackText, false, hurtResult.feedbackColor);
+              this.particles.spawnSparks(p.x, p.y, '#f59e0b', 24);
+            } else {
+              if (hurtResult.wasGuarded) {
+                SoundManager.getInstance().playSwordClash();
+              } else {
+                SoundManager.getInstance().playHitImpact();
+              }
+              this.triggerScreenShake(hurtResult.isCritical ? 0.35 : 0.25, hurtResult.isCritical ? 14 : 9);
+              this.particles.spawnSparks(p.x, p.y, hurtResult.isCritical ? '#fbbf24' : p.color, 28);
+              this.particles.spawnDamageText(this.monster.x + 25, this.monster.y - 18, hurtResult.feedbackText, hurtResult.isCritical, hurtResult.feedbackColor);
 
-            if (this.monster.currentHp <= 0) {
-              this.handleCombatVictory();
+              this.combatStats.radoxomsHit++;
+              this.combatStats.damageDealt += hurtResult.actualDamage;
+              this.updateCombatAccuracy();
+              this.onMonsterHealthChanged?.(this.monster.currentHp, this.monster.maxHp);
+
+              if (this.monster.currentHp <= 0) {
+                this.handleCombatVictory();
+              }
             }
 
             this.radoxomProjectiles.splice(i, 1);

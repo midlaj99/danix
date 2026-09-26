@@ -231,8 +231,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               <Target className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
               <span>PRACTICE ARENA (INFINITE)</span>
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-950/60 text-rose-400 border border-rose-500/30">
-              FREE TRIAL
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-500/40">
+              ENDLESS DRILLS
             </span>
           </button>
 

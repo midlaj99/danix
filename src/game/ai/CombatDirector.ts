@@ -122,7 +122,7 @@ export class PlayerBehaviorAnalyzer {
     } else {
       this.metrics.stationaryTime = Math.max(0, this.metrics.stationaryTime - dt * 2.0);
     }
-    this.metrics.isCamping = this.metrics.stationaryTime > 1.1;
+    this.metrics.isCamping = this.metrics.stationaryTime > 0.45;
 
     // 2. Dodge direction detection
     if (heroIsDodging && !this.wasHeroDodging) {
@@ -549,6 +549,19 @@ export class CombatDirector {
     } else if (this.poise < this.maxPoise) {
       this.poise = Math.min(this.maxPoise, this.poise + dt * 45);
     }
+  }
+
+  /**
+   * Immediate punitive counter-attack when player camps or launches static attacks.
+   */
+  public triggerImmediatePunish(heroX: number): void {
+    const dist = Math.abs(heroX - this.desiredCombatPositionX);
+    if (dist < 260) {
+      this.attackIntent = 'DASH_STRIKE';
+    } else {
+      this.attackIntent = 'SHOCKWAVE';
+    }
+    this.movementIntent = 'APPROACH';
   }
 
   /**

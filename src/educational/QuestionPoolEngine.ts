@@ -384,7 +384,7 @@ export class QuestionHistoryManager {
     if (!isRetry) {
       // First attempt on level: strictly serve the curated questions designed for this level!
       // Keep educational order and mark them as used in history.
-      const selected = primaryQuestions.slice(0, Math.max(countNeeded, primaryQuestions.length));
+      const selected = countNeeded > 0 ? primaryQuestions.slice(0, countNeeded) : primaryQuestions;
       selected.forEach((q) => usedIds!.add(q.id));
       return selected.map(shuffleQuestion);
     }
@@ -392,7 +392,11 @@ export class QuestionHistoryManager {
     // RETRY SESSION (player died in combat and needs ammo):
     // Priority 1: Unused questions from this level's primary list
     const unusedPrimary = primaryQuestions.filter((q) => !usedIds!.has(q.id));
-    const selected: Question[] = [...unusedPrimary];
+    const selected: Question[] = [];
+    for (const q of unusedPrimary) {
+      if (selected.length >= countNeeded) break;
+      selected.push(q);
+    }
 
     // Priority 2: Level-appropriate variants that only require concepts up to this level
     if (selected.length < countNeeded) {

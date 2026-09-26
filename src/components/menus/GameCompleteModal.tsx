@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import { TopicMastery } from '../../types/game';
 import { SoundManager } from '../../audio/SoundManager';
-import { Crown, Target, ArrowRight, BookOpen, CheckCircle } from 'lucide-react';
+import { Crown, Target, ArrowRight, BookOpen, CheckCircle, Award, Sparkles } from 'lucide-react';
+import { CertificateModal } from '../certificate/CertificateModal';
 
 interface GameCompleteModalProps {
   topicMastery: TopicMastery;
@@ -18,7 +20,22 @@ export const GameCompleteModal: React.FC<GameCompleteModalProps> = ({
   onOpenArena,
   onReturnToMenu,
 }) => {
+  const [showCertificate, setShowCertificate] = useState(false);
   const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 100;
+
+  useEffect(() => {
+    SoundManager.getInstance().playVictoryFanfare();
+    try {
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { y: 0.5 },
+        colors: ['#f59e0b', '#fbbf24', '#38bdf8', '#10b981', '#ec4899'],
+      });
+    } catch (e) {
+      console.warn('Confetti error:', e);
+    }
+  }, []);
 
   // Identify weak topics (< 75%)
   const weakTopics = Object.entries(topicMastery).filter(([_, data]) => data.percentage < 75);
@@ -112,11 +129,23 @@ export const GameCompleteModal: React.FC<GameCompleteModalProps> = ({
           <button
             onClick={() => {
               SoundManager.getInstance().playUiClick();
+              setShowCertificate(true);
+            }}
+            className="w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-rpg font-bold text-sm py-3.5 px-6 rounded-xl shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2.5 transform active:scale-95 transition cursor-pointer animate-pulse"
+          >
+            <Award className="w-5 h-5 text-slate-950" />
+            CLAIM OFFICIAL MASTER CERTIFICATE
+            <Sparkles className="w-4 h-4 text-slate-950" />
+          </button>
+
+          <button
+            onClick={() => {
+              SoundManager.getInstance().playUiClick();
               onOpenArena();
             }}
-            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-950 font-rpg font-bold text-sm py-3 px-6 rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transform active:scale-95 transition cursor-pointer"
+            className="w-full bg-slate-900 hover:bg-slate-800 border border-sky-500/40 text-sky-200 hover:text-white font-rpg font-bold text-xs sm:text-sm py-3 px-6 rounded-xl flex items-center justify-center gap-2 transform active:scale-95 transition cursor-pointer"
           >
-            ENTER FREE PRACTICE ARENA <ArrowRight className="w-4 h-4" />
+            ENTER PRACTICE ARENA <ArrowRight className="w-4 h-4" />
           </button>
 
           <button
@@ -130,6 +159,15 @@ export const GameCompleteModal: React.FC<GameCompleteModalProps> = ({
           </button>
         </div>
       </div>
+
+      {showCertificate && (
+        <CertificateModal
+          accuracy={accuracy}
+          totalCorrect={totalCorrect}
+          totalQuestions={totalQuestions}
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
     </div>
   );
 };

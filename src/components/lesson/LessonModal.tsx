@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LessonTheory, MiniPractice } from '../../types/curriculum';
 import { SoundManager } from '../../audio/SoundManager';
 import { shuffleMiniPractice } from '../../educational/questionUtils';
-import { BookOpen, Code, Terminal, CheckCircle2, XCircle, ArrowRight, Sparkles, Layers, Lightbulb, AlertTriangle } from 'lucide-react';
+import { BookOpen, Code, Terminal, CheckCircle2, XCircle, ArrowRight, Sparkles, Layers, Lightbulb, AlertTriangle, ListChecks } from 'lucide-react';
 import { AriaAvatar } from '../common/AriaAvatar';
 
 interface LessonModalProps {
@@ -20,7 +20,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   miniPractice,
   onFinishLesson,
 }) => {
-  const [activeTab, setActiveTab] = useState<'theory' | 'code' | 'practice'>('theory');
+  const [activeTab, setActiveTab] = useState<'theory' | 'summary' | 'code' | 'practice'>('theory');
   const [selectedPracticeOption, setSelectedPracticeOption] = useState<number | null>(null);
   const [hasAnsweredPractice, setHasAnsweredPractice] = useState(false);
   const [practiceData, setPracticeData] = useState<MiniPractice>(() => shuffleMiniPractice(miniPractice));
@@ -70,6 +70,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
   const whatIsItBullets = formatBullets(theory.partA.explanation);
   const breakdownBullets = formatBullets(theory.partB.breakdown);
+  const summaryPoints = theory.summary && theory.summary.length > 0
+    ? theory.summary
+    : [
+        theory.partA.concept,
+        theory.partA.whyUseIt,
+        ...formatBullets(theory.partA.explanation),
+        ...formatBullets(theory.partB.breakdown).slice(0, 2)
+      ];
 
   return (
     <div
@@ -102,14 +110,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             </div>
           </div>
 
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs (4 Steps: Theory -> Summary -> Examples -> Practice) */}
           <div className="flex items-center bg-slate-900/90 p-0.5 rounded-xl border border-slate-800 shrink-0">
             <button
               onClick={() => {
                 SoundManager.getInstance().playUiClick();
                 setActiveTab('theory');
               }}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9.5px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
                 activeTab === 'theory'
                   ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
                   : 'text-slate-400 hover:text-slate-200'
@@ -120,28 +128,41 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             <button
               onClick={() => {
                 SoundManager.getInstance().playUiClick();
+                setActiveTab('summary');
+              }}
+              className={`flex items-center gap-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
+                activeTab === 'summary'
+                  ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ListChecks className="w-3 h-3" /> 2. Summary
+            </button>
+            <button
+              onClick={() => {
+                SoundManager.getInstance().playUiClick();
                 setActiveTab('code');
               }}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9.5px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
                 activeTab === 'code'
                   ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Code className="w-3 h-3" /> 2. Examples
+              <Code className="w-3 h-3" /> 3. Examples
             </button>
             <button
               onClick={() => {
                 SoundManager.getInstance().playUiClick();
                 setActiveTab('practice');
               }}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9.5px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1 px-1.5 xs:px-2 py-1 rounded-lg text-[9px] sm:text-xs font-rpg font-semibold transition cursor-pointer ${
                 activeTab === 'practice'
                   ? 'bg-amber-500 text-slate-950 shadow-md font-bold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <CheckCircle2 className="w-3 h-3" /> 3. Practice
+              <CheckCircle2 className="w-3 h-3" /> 4. Practice
             </button>
           </div>
         </div>
@@ -223,7 +244,49 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: CODE EXAMPLE & OUTPUT */}
+          {/* TAB 2: SUMMARY / WHAT YOU LEARNED */}
+          {activeTab === 'summary' && (
+            <div className="space-y-2.5 animate-fadeIn">
+              <div className="bg-slate-900/80 p-3 sm:p-4 rounded-xl border border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-amber-500/20 p-1.5 rounded-lg border border-amber-400/30 text-amber-300">
+                      <ListChecks className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-amber-300 font-rpg font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>WHAT YOU LEARNED IN THIS LESSON</span>
+                      </h3>
+                      <p className="text-[10px] text-slate-400">
+                        Essential takeaways, core syntax, and critical rules for {topicTitle}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="hidden sm:inline-block bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-[10px] text-amber-400 font-mono font-bold">
+                    {summaryPoints.length} Key Points
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {summaryPoints.map((point, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-slate-950/70 p-2 sm:p-2.5 rounded-xl border border-slate-800/80 flex items-start gap-2.5 hover:border-amber-500/40 transition"
+                    >
+                      <div className="bg-amber-500/10 text-amber-400 font-mono font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center shrink-0 border border-amber-500/30 mt-0.5">
+                        {idx + 1}
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        {point}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CODE EXAMPLE & OUTPUT */}
           {activeTab === 'code' && (
             <div className="space-y-2.5 animate-fadeIn">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">

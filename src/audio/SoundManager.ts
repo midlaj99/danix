@@ -270,6 +270,27 @@ export class SoundManager {
     });
   }
 
+  public playShieldBlock() {
+    this.ensureContext();
+    if (!this.ctx || !this.sfxGain) return;
+    const time = this.ctx.currentTime;
+
+    // Heavy blunt kinetic deflection clank
+    [480, 920, 1850].forEach((freq, i) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, time);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.4, time + 0.22);
+      gain.gain.setValueAtTime(0.35 / (i + 1), time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+      osc.start(time);
+      osc.stop(time + 0.35);
+    });
+  }
+
   public playHitImpact() {
     this.ensureContext();
     if (!this.ctx || !this.sfxGain) return;

@@ -110,14 +110,24 @@ export class Hero {
   public stuckTimer: number = 0;
   public lastX: number = 100;
 
+  // Anti-Static Momentum & Dynamic Strike System
+  public staticTimer: number = 0;
+  public staticWarnTimer: number = 0;
+  public isStaticStance: boolean = false;
+
+  public isMovingOrAirborne(): boolean {
+    return Math.abs(this.vx) > 30 || !this.isGrounded || this.isDodging || this.isDashingToAttack;
+  }
+
   // State Capability Queries
   public canMove(): boolean {
     if (this.state === 'death' || this.state === 'victory') return false;
     return true;
   }
 
-  public canAttack(): boolean {
+  public canAttack(isCombat: boolean = false): boolean {
     if (this.state === 'death' || this.state === 'victory' || this.isDodging) return false;
+    if (isCombat && this.isStaticStance) return false;
     return performance.now() >= this.nextAttackTime;
   }
 
@@ -175,6 +185,18 @@ export class Hero {
       this.comboResetTimer -= dt;
       if (this.comboResetTimer <= 0) this.comboStep = 1;
     }
+
+    // 3.5. Anti-Static Stance Watchdog (Attacks strictly require dynamic movement)
+    if (!this.isMovingOrAirborne()) {
+      this.staticTimer += dt;
+      if (this.staticTimer >= 0.14) {
+        this.isStaticStance = true;
+      }
+    } else {
+      this.staticTimer = 0;
+      this.isStaticStance = false;
+    }
+    if (this.staticWarnTimer > 0) this.staticWarnTimer -= dt;
 
     // 3.5 Stamina Regeneration & Sprint Drain
     if (!this.isDodging) {
@@ -523,9 +545,42 @@ export class Hero {
     const breath = Math.sin(this.breathPhase) * 1.5;
     const bob = isMoving ? Math.sin(this.animFrame * Math.PI) * (this.state === 'sprint' ? 6 : this.state === 'run' ? 4 : 2.5) : breath;
     const legOffset = isMoving ? Math.sin((this.animFrame * Math.PI) / 2) * (this.state === 'sprint' ? 16 : this.state === 'run' ? 12 : 8) : 0;
+    // --- ANTI-STATIC STANCE & MOMENTUM GROUND INDICATOR ---
+    const now = performance.now();
+    if (this.state !== 'death') {
+      ctx.save();
+      if (this.isStaticStance) {
+        // Red/Amber pulsing lock ring warning player to move
+        const warnPulse = (Math.sin(now * 0.012) + 1) * 0.5;
+        ctx.strokeStyle = this.staticWarnTimer > 0
+          ? `rgba(239, 68, 68, ${0.85 + warnPulse * 0.15})`
+          : `rgba(245, 158, 11, ${0.45 + warnPulse * 0.35})`;
+        ctx.lineWidth = this.staticWarnTimer > 0 ? 3 : 2;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        ctx.ellipse(0, -2, 28, 9, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Warning lock text when attempting to attack while static
+        if (this.staticWarnTimer > 0) {
+          ctx.fillStyle = '#ef4444';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('⚡ MOVE TO ATTACK!', 0, -this.height - 18);
+        }
+      } else if (Math.abs(this.vx) > 50 || !this.isGrounded) {
+        // Cyan/Emerald dynamic momentum indicator
+        const speedRatio = Math.min(1, Math.abs(this.vx) / 350);
+        ctx.strokeStyle = `rgba(52, 211, 153, ${0.4 + speedRatio * 0.4})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(0, -2, 24, 7, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // --- EVOLVING GLOWING HERO AURA ---
-    const now = performance.now();
     const auraPulse = (Math.sin(now * 0.006) + 1) * 0.5;
     ctx.save();
     const auraGrad = ctx.createRadialGradient(0, -32 + bob, 16, 0, -32 + bob, 48 + auraPulse * 10);
